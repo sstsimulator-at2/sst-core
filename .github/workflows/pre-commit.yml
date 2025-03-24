@@ -16,6 +16,8 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
+    strategy:
+      fail-fast: false
     steps:
       # Set the WIP label immediately before testing
       - name: SET WIP Label before testing
