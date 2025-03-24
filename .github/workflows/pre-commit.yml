@@ -9,13 +9,13 @@ concurrency:
   group: style-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
-permissions:
-  issues: write
-  pull-requests: write
-
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    # for label manipulation
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
       # Set the WIP label immediately before testing
       - name: SET WIP Label before testing
