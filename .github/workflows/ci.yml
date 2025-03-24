@@ -13,6 +13,10 @@ concurrency:
 jobs:
   prechecks:
     uses: ./.github/workflows/pre-commit.yml
+    # for label manipulation
+    permissions:
+      issues: write
+      pull-requests: write
   all-prechecks:
     needs: [prechecks]
     runs-on: ubuntu-latest
