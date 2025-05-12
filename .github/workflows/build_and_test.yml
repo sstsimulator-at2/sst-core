@@ -119,4 +119,6 @@ jobs:
 
       - name: test
         run: |
+          # needed for ncurses part of interactive sst-info
+          export TERM=dumb
           "${INSTALL_PATH}"/bin/sst-test-core
