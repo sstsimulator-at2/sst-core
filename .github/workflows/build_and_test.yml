@@ -23,11 +23,11 @@ jobs:
             build-system: {name: "autotools", generator: "Make"}
             with-mpi: false
             compiler: {cc: "clang", cxx: "clang++"}
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-24.04
             build-system: {name: "autotools", generator: "Make"}
             with-mpi: true
             compiler: {cc: "gcc", cxx: "g++"}
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-24.04
             build-system: {name: "autotools", generator: "Make"}
             with-mpi: false
             compiler: {cc: "gcc", cxx: "g++"}
