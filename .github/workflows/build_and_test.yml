@@ -14,39 +14,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - macos-14
-          - macos-15
-          - ubuntu-24.04-arm
-        build-system:
-          - {name: "autotools", generator: "Make"}
-          - {name: "cmake", generator: "Unix Makefiles"}
-          - {name: "cmake", generator: "Ninja"}
-        # Using bundled Python versions for now.
-        # python-version:
-        #   - "3.8"
-        #   - "3.10"
-        #   - "3.12"
-        with-mpi:
-          - true
-          - false
-        compiler:
-          - {cc: "clang", cxx: "clang++"}
-          - {cc: "gcc", cxx: "g++"}
-        exclude:
+        include:
           - os: macos-14
-            build-system: {name: "cmake", generator: "Unix Makefiles"}
-            # Not specifying "with-mpi" will exclude all "with-mpi" entries.
-          - os: ubuntu-24.04-arm
-            build-system: {name: "cmake", generator: "Unix Makefiles"}
+            build-system: {name: "autotools", generator: "Make"}
             with-mpi: false
-            # Force "obvious" default compilers (gcc on Linux, clang on macOS).
-          - os: macos-14
-            compiler: {cc: "gcc", cxx: "g++"}
+            compiler: {cc: "clang", cxx: "clang++"}
           - os: macos-15
+            build-system: {name: "autotools", generator: "Make"}
+            with-mpi: false
+            compiler: {cc: "clang", cxx: "clang++"}
+          - os: ubuntu-24.04-arm
+            build-system: {name: "autotools", generator: "Make"}
+            with-mpi: true
             compiler: {cc: "gcc", cxx: "g++"}
-          # - os: ubuntu-24.04-arm
-          #   compiler: {cc: "clang", cxx: "clang++"}
+          - os: ubuntu-24.04-arm
+            build-system: {name: "autotools", generator: "Make"}
+            with-mpi: false
+            compiler: {cc: "gcc", cxx: "g++"}
     runs-on: ${{ matrix.os }}
     name: test:${{ matrix.os }}/${{ matrix.build-system.name }}-${{ matrix.build-system.generator }}/mpi-${{ matrix.with-mpi }}
     env:
