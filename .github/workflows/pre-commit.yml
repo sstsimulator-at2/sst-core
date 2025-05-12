@@ -31,6 +31,7 @@ jobs:
                 repo: context.repo.repo,
                 labels: ['AT: WIP']
               })
+        if: github.event_name == 'pull_request'
 
       # Get this user's SST-core repo/branch
       - uses: actions/checkout@v4
@@ -57,7 +58,7 @@ jobs:
                 repo: context.repo.repo,
                 labels: ['AT: CLANG-FORMAT FAIL', 'AT: WIP']
               })
-        if: ${{ failure() }}
+        if: ${{ failure() && github.event_name == 'pull_request' }}
 
       - name: REMOVE PASS Label Results for Failure
         uses: actions/github-script@v7
@@ -70,7 +71,7 @@ jobs:
                 repo: context.repo.repo,
                 name: 'AT: CLANG-FORMAT PASS'
               })
-        if: ${{ failure() }}
+        if: ${{ failure() && github.event_name == 'pull_request' }}
         continue-on-error: true
 
       - name: ADD COMMENT ABOUT FAIL
@@ -84,7 +85,7 @@ jobs:
                 repo: context.repo.repo,
                 body: '**PRE-COMMIT - FAILED** (on last commit): <br>Run `pre-commit run -a` to apply fixes'
               })
-        if: ${{ failure() }}
+        if: ${{ failure() && github.event_name == 'pull_request' }}
 
 
       #############################
@@ -101,7 +102,7 @@ jobs:
                 repo: context.repo.repo,
                 labels: ['AT: CLANG-FORMAT PASS']
               })
-        if: ${{ success() }}
+        if: ${{ success() && github.event_name == 'pull_request' }}
 
       - name: REMOVE WIP Label Results for Success
         uses: actions/github-script@v7
@@ -114,7 +115,7 @@ jobs:
                 repo: context.repo.repo,
                 name: 'AT: WIP'
               })
-        if: ${{ success() }}
+        if: ${{ success() && github.event_name == 'pull_request' }}
         continue-on-error: true
 
       - name: REMOVE FAIL Label Results for Success
@@ -128,7 +129,7 @@ jobs:
                 repo: context.repo.repo,
                 name: 'AT: CLANG-FORMAT FAIL'
               })
-        if: ${{ success() }}
+        if: ${{ success() && github.event_name == 'pull_request' }}
         continue-on-error: true
 
       - name: ADD COMMENT ABOUT SUCCESS
@@ -142,4 +143,4 @@ jobs:
                 repo: context.repo.repo,
                 body: '**PRE-COMMIT - PASSED**'
               })
-        if: ${{ success() }}
+        if: ${{ success() && github.event_name == 'pull_request' }}
