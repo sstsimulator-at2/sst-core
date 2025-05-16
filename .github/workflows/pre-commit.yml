@@ -23,7 +23,7 @@ jobs:
     steps:
       # Set the WIP label immediately before testing
       - name: SET WIP Label before testing
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -36,12 +36,12 @@ jobs:
         if: github.event_name == 'pull_request'
 
       # Get this user's SST-core repo/branch
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
           # ref: ${{ github.event.pull_request.head.sha }}
       # Run all the pre-commit checks: clang-format, cmake-format, ...
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
       #############################################
@@ -50,7 +50,7 @@ jobs:
 
       # Label the Results - FOR FAILURE
       - name: ADD FAIL + WIP Label Results for Failure
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -63,7 +63,7 @@ jobs:
         if: ${{ failure() && github.event_name == 'pull_request' }}
 
       - name: REMOVE PASS Label Results for Failure
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -77,7 +77,7 @@ jobs:
         continue-on-error: true
 
       - name: ADD COMMENT ABOUT FAIL
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -94,7 +94,7 @@ jobs:
 
       # Label the Results - FOR SUCCESS
       - name: ADD PASS Label Results for Success
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -107,7 +107,7 @@ jobs:
         if: ${{ success() && github.event_name == 'pull_request' }}
 
       - name: REMOVE WIP Label Results for Success
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -121,7 +121,7 @@ jobs:
         continue-on-error: true
 
       - name: REMOVE FAIL Label Results for Success
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -135,7 +135,7 @@ jobs:
         continue-on-error: true
 
       - name: ADD COMMENT ABOUT SUCCESS
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
