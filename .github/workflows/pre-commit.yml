@@ -85,7 +85,7 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: '**PRE-COMMIT - FAILED** (on last commit): <br>Run `pre-commit run -a` to apply fixes'
+                body: '**PRE-COMMIT - FAILED** (on last commit): <br>Run `pre-commit run -a` locally to view fixes'
               })
         if: ${{ failure() && github.event_name == 'pull_request' }}
 
