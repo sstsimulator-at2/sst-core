@@ -9,6 +9,8 @@ concurrency:
   group: build-and-test-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   build-and-test:
     strategy:
@@ -42,6 +44,8 @@ jobs:
 
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: install prerequisites macOS
         run: brew install coreutils ncurses
