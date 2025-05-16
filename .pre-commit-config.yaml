@@ -64,3 +64,8 @@ repos:
     hooks:
       - id: zizmor
         args: [--no-progress, --persona=pedantic]
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 40.13.0
+    hooks:
+      - id: renovate-config-validator
+        args: [--strict]
