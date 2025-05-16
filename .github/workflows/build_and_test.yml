@@ -45,12 +45,11 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
         with:
+          append-timestamp: false
           create-symlink: true
           key: >-
-            ccache-${{ matrix.os }}
-            -${{ matrix.build-system.name }}-${{ matrix.build-system.generator }}
-            -${{ matrix.with-mpi }}
-            -${{ matrix.compiler.cc }}-${{ matrix.compiler.cxx }}
+            ccache-${{ matrix.os }}-${{ matrix.build-system.name }}-${{ matrix.build-system.generator }}-${{ matrix.with-mpi }}-${{ matrix.compiler.cc }}-${{ matrix.compiler.cxx }}
+          max-size: "2GB"
           verbose: 2
 
       - name: checkout
