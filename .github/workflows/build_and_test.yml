@@ -9,6 +9,8 @@ concurrency:
   group: build-and-test-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   build-and-test:
     strategy:
@@ -40,8 +42,20 @@ jobs:
       SST_DISABLE_MPI_CMAKE: ${{ matrix.with-mpi && 'OFF' || 'ON' }}
     steps:
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
+        with:
+          append-timestamp: false
+          create-symlink: true
+          key: >-
+            ccache-${{ matrix.os }}-${{ matrix.build-system.name }}-${{ matrix.build-system.generator }}-${{ matrix.with-mpi }}-${{ matrix.compiler.cc }}-${{ matrix.compiler.cxx }}
+          max-size: "2GB"
+          verbose: 2
+
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: install prerequisites macOS
         run: brew install coreutils ncurses

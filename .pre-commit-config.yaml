@@ -9,7 +9,9 @@ repos:
     rev: "v5.0.0"
     hooks:
       - id: check-case-conflict
+      - id: check-json
       - id: check-merge-conflict
+      - id: check-yaml
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: "v0.6.13"
     hooks:
@@ -38,9 +40,9 @@ repos:
         additional_dependencies:
           - "github.com/wasilibs/go-shellcheck/cmd/shellcheck@v0.10.0"
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.11.9"
+    rev: "v0.11.10"
     hooks:
-      - id: ruff
+      - id: ruff-check
   - repo: https://github.com/pre-commit/mirrors-mypy
     # This needs to match the last version that still supports the minimum
     # required Python version
@@ -57,3 +59,8 @@ repos:
         # for the idea.
         args: [.]
         pass_filenames: false
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.7.0
+    hooks:
+      - id: zizmor
+        args: [--no-progress, --persona=pedantic]
