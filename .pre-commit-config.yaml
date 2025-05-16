@@ -63,4 +63,4 @@ repos:
     rev: v1.7.0
     hooks:
       - id: zizmor
-        args: [--persona=pedantic]
+        args: [--no-progress, --persona=pedantic]
