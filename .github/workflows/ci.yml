@@ -28,6 +28,8 @@ jobs:
   tests:
     needs: [all-prechecks]
     uses: ./.github/workflows/build_and_test.yml
+    permissions:
+      actions: write
   at2-tests:
     needs: [all-prechecks]
     uses: ./.github/workflows/build_and_test_at2.yml
