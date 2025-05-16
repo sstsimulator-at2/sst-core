@@ -46,7 +46,7 @@ repos:
   - repo: https://github.com/pre-commit/mirrors-mypy
     # This needs to match the last version that still supports the minimum
     # required Python version
-    rev: "v1.5.1"
+    rev: "v1.15.0"
     hooks:
       - id: mypy
         additional_dependencies:
