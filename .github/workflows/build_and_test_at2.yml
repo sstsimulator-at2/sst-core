@@ -10,8 +10,7 @@ on:
   #     - devel
   workflow_call:
 
-permissions:
-  contents: read
+permissions: {}
 
 # Cancels any in progress 'workflow' associated with this PR
 concurrency:

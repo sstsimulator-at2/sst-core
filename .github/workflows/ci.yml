@@ -31,6 +31,8 @@ jobs:
   at2-tests:
     needs: [all-prechecks]
     uses: ./.github/workflows/build_and_test_at2.yml
+    permissions:
+      actions: write
   all-tests:
     needs: [tests, at2-tests]
     runs-on: ubuntu-latest
