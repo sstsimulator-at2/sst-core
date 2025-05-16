@@ -3,7 +3,7 @@ name: sst-core build/install/test
 
 # yamllint disable-line rule:truthy
 on:
-  push:
+  workflow_call:
 
 concurrency:
   group: build-and-test-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
