@@ -1,0 +1,56 @@
+---
+name: AT2
+
+on:
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - synchronize
+  #   branches:
+  #     - devel
+  workflow_call:
+
+permissions: {}
+
+# Cancels any in progress 'workflow' associated with this PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # gcc:
+  #   uses:
+  #     ./.github/workflows/intel.yml
+  # intel:
+  #   uses:
+  #     ./.github/workflows/gcc.yml
+  # Jobs depend on the output of pre-checks to run.
+  # Cancels new workflows if prior runs were successful (same tree hash)
+  pre-checks:
+    runs-on: ubuntu-latest
+    # actions: write needed by skip-duplicate-actions
+    permissions:
+      actions: write
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5.3.1
+        with:
+          skip_after_successful_duplicate: 'true'
+  build-and-test:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
+        with:
+          append-timestamp: false
+          create-symlink: true
+          # TODO key:
+          max-size: "2GB"
+          verbose: 2
+      - name: stub
+        run: |
+          echo "hello, world"
