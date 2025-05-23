@@ -51,6 +51,9 @@ jobs:
           # TODO key:
           max-size: "2GB"
           verbose: 2
-      - name: stub
-        run: |
-          echo "hello, world"
+  rocky9:
+    uses:
+      ./.github/workflows/at2/rocky9.yml
+  rocky9-nompi:
+    uses:
+      ./.github/workflows/at2/rocky9-nompi.yml
