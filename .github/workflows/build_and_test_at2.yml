@@ -53,7 +53,7 @@ jobs:
           verbose: 2
   rocky9:
     uses:
-      ./.github/workflows/at2/rocky9.yml
+      ./.github/workflows/at2-rocky9.yml
   rocky9-nompi:
     uses:
-      ./.github/workflows/at2/rocky9-nompi.yml
+      ./.github/workflows/at2-rocky9-nompi.yml
