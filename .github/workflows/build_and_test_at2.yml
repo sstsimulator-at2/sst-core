@@ -52,8 +52,12 @@ jobs:
           max-size: "2GB"
           verbose: 2
   rocky9:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') }}
     uses:
       ./.github/workflows/at2-rocky9.yml
   rocky9-nompi:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') }}
     uses:
       ./.github/workflows/at2-rocky9-nompi.yml
