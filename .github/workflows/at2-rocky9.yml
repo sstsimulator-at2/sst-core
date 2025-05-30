@@ -8,7 +8,9 @@ permissions: {}
 
 jobs:
   rocky9:
-    runs-on: ubuntu-24.04
+    runs-on:
+      - self-hosted
+      - sst-rocky9
     container:
       image: rockylinux@sha256:197b1569a8e5d46de75412cfd80b88a437d25bb2a5338dc82d5421d835245ec7
     steps:

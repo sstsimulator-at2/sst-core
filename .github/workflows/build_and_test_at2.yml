@@ -18,12 +18,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # gcc:
-  #   uses:
-  #     ./.github/workflows/intel.yml
-  # intel:
-  #   uses:
-  #     ./.github/workflows/gcc.yml
   # Jobs depend on the output of pre-checks to run.
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
