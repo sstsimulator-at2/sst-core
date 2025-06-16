@@ -59,8 +59,8 @@ repos:
         # for the idea.
         args: [.]
         pass_filenames: false
-  - repo: https://github.com/woodruffw/zizmor-pre-commit
-    rev: v1.8.0
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.9.0
     hooks:
       - id: zizmor
         args: [--no-progress, --persona=pedantic]

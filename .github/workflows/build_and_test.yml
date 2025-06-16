@@ -52,7 +52,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: test:${{ matrix.os }}/${{ matrix.build-system.name }}-${{ matrix.build-system.generator }}/mpi-${{ matrix.with-mpi }}
     env:
+      CC: ${{ matrix.compiler.cc }}
+      CMAKE_GENERATOR: ${{ matrix.build-system.generator }}
       CORE_BUILD_PATH: ${{ github.workspace }}/core_build
+      CXX: ${{ matrix.compiler.cxx }}
+      GITHUB_WORKSPACE: ${{ github.workspace }}
       INSTALL_PATH: ${{ github.workspace }}/install
       SST_DISABLE_MPI_AUTOTOOLS: ${{ !matrix.with-mpi && '--disable-mpi' || '' }}
       SST_DISABLE_MPI_CMAKE: ${{ matrix.with-mpi && 'OFF' || 'ON' }}
@@ -64,7 +68,7 @@ jobs:
           append-timestamp: false
           create-symlink: true
           key: >-
-            ccache-${{ matrix.os }}-${{ matrix.build-system.name }}-${{ matrix.build-system.generator }}-${{ matrix.with-mpi }}-${{ matrix.compiler.cc }}-${{ matrix.compiler.cxx }}
+            ccache-${{ matrix.os }}-${{ matrix.build-system.name }}-${CMAKE_GENERATOR}-${{ matrix.with-mpi }}-${CC}-${CXX}
           max-size: "2GB"
           verbose: 2
 
@@ -103,13 +107,11 @@ jobs:
 
       - name: autotools configure
         run: |
-          export CC=${{ matrix.compiler.cc }}
-          export CXX=${{ matrix.compiler.cxx }}
-          ${{ github.workspace }}/autogen.sh
+          "${GITHUB_WORKSPACE}"/autogen.sh
           # out-of-source build
           mkdir -p "${CORE_BUILD_PATH}"
           cd "${CORE_BUILD_PATH}"
-          ${{ github.workspace }}/configure \
+          "${GITHUB_WORKSPACE}"/configure \
             --prefix="${INSTALL_PATH}" "${SST_DISABLE_MPI_AUTOTOOLS}"
         if: ${{ matrix.build-system.name == 'autotools' }}
 
@@ -128,13 +130,12 @@ jobs:
       - name: cmake configure
         run: |
           cmake \
-            -S ${{ github.workspace }}/experimental \
+            -S "${GITHUB_WORKSPACE}/experimental" \
             -B "${CORE_BUILD_PATH}" \
             -DCMAKE_INSTALL_PREFIX="${INSTALL_PATH}" \
-            -DCMAKE_C_COMPILER=${{ matrix.compiler.cc }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
-            -DSST_DISABLE_MPI="${SST_DISABLE_MPI_CMAKE}" \
-            -G'${{ matrix.build-system.generator }}'
+            -DCMAKE_C_COMPILER="${CC}" \
+            -DCMAKE_CXX_COMPILER="${CXX}" \
+            -DSST_DISABLE_MPI="${SST_DISABLE_MPI_CMAKE}"
         if: ${{ matrix.build-system.name == 'cmake' }}
 
       - name: cmake build
