@@ -34,7 +34,7 @@ jobs:
           skip_after_successful_duplicate: 'true'
   build-and-test:
     needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') }}
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     runs-on: ubuntu-latest
     steps:
       - name: ccache
@@ -47,11 +47,11 @@ jobs:
           verbose: 2
   rocky9:
     needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') }}
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
       ./.github/workflows/at2-rocky9.yml
   rocky9-nompi:
     needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') }}
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
       ./.github/workflows/at2-rocky9-nompi.yml

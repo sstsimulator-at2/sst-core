@@ -5,6 +5,10 @@ name: ci
 on:
   push:
   pull_request:
+    types:
+      - labeled
+      - opened
+      - synchronize
 
 concurrency:
   group: ci-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
