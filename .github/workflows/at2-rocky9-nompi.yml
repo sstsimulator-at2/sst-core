@@ -1,0 +1,17 @@
+---
+name: rocky9-nompi
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  rocky9-nompi:
+    runs-on:
+      - self-hosted
+      - sst-rocky9
+    steps:
+      - name: stub
+        run: |
+          echo "without mpi"

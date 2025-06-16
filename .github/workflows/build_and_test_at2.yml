@@ -18,12 +18,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # gcc:
-  #   uses:
-  #     ./.github/workflows/intel.yml
-  # intel:
-  #   uses:
-  #     ./.github/workflows/gcc.yml
   # Jobs depend on the output of pre-checks to run.
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
@@ -51,6 +45,13 @@ jobs:
           # TODO key:
           max-size: "2GB"
           verbose: 2
-      - name: stub
-        run: |
-          echo "hello, world"
+  rocky9:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') }}
+    uses:
+      ./.github/workflows/at2-rocky9.yml
+  rocky9-nompi:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') }}
+    uses:
+      ./.github/workflows/at2-rocky9-nompi.yml

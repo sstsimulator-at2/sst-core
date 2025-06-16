@@ -1,0 +1,17 @@
+---
+name: rocky9
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  rocky9:
+    runs-on:
+      - self-hosted
+      - sst-rocky9
+    steps:
+      - name: stub
+        run: |
+          echo "with mpi"
