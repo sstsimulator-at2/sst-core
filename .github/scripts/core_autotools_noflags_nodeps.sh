@@ -38,7 +38,11 @@ pushd "${dir_build}"
 INSTALL="$(command -v install) -p" "${dir_src}"/configure \
        --prefix="${dir_install}"
 
-"$(command -v bear)" -- make install -j"$(nproc)"
-ln -fsv "${dir_build}"/compile_commands.json "${dir_src}"/compile_commands.json
+if command -v bear >& /dev/null; then
+    "$(command -v bear)" -- make install -j"$(nproc)"
+    ln -fsv "${dir_build}"/compile_commands.json "${dir_src}"/compile_commands.json
+else
+    make install -j"$(nproc)"
+fi
 # no installation available
 # make html

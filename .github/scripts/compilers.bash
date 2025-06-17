@@ -54,11 +54,6 @@ clean_suffix() {
     echo "${cleaned}"
 }
 
-if ! command -v bear >&/dev/null; then
-    echo "bear not found in PATH"
-    exit 1
-fi
-
 # Handle the case where the Pin binary is on the path but the SST-specific
 # environment variable needed for the compile and link lines isn't present.
 # if [[ -z "${INTEL_PIN_DIRECTORY}" ]]; then

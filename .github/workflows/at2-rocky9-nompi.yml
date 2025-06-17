@@ -30,7 +30,5 @@ jobs:
 
       - name: Compile and test SST core and elements
         run: |
-          pwd
-          ls -al
           # TODO the argument does nothing as long as Spack is unavailable
           .github/scripts/core_autotools_noflags_nodeps_nompi.sh gcc

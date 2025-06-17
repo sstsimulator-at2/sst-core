@@ -34,8 +34,6 @@ cmake \
     -S"${dir_src}/experimental" \
     -DCMAKE_INSTALL_PREFIX="${dir_install}"
 
-pushd "${dir_build}"
 cmake --build "${dir_build}"
 cmake --install "${dir_build}"
-popd
 ln -fsv "${dir_build}"/compile_commands.json "${dir_src}"/compile_commands.json
