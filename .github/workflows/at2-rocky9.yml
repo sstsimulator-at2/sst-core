@@ -12,6 +12,12 @@ jobs:
       - self-hosted
       - sst-rocky9
     steps:
+
+      - name: checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
         with:
@@ -21,6 +27,7 @@ jobs:
             ccache-${{ github.job }}
           max-size: "2GB"
           verbose: 2
+
       - name: Compile and test SST core and elements
         run: |
           pwd

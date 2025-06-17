@@ -62,6 +62,11 @@ jobs:
       SST_DISABLE_MPI_CMAKE: ${{ matrix.with-mpi && 'OFF' || 'ON' }}
     steps:
 
+      - name: checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
         with:
@@ -71,11 +76,6 @@ jobs:
             ccache-${{ matrix.os }}-${{ matrix.build-system.name }}-${CMAKE_GENERATOR}-${{ matrix.with-mpi }}-${CC}-${CXX}
           max-size: "2GB"
           verbose: 2
-
-      - name: checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-        with:
-          persist-credentials: false
 
       - name: install prerequisites macOS
         run: brew install coreutils ncurses
