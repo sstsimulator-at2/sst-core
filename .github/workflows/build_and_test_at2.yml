@@ -32,19 +32,6 @@ jobs:
         uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5.3.1
         with:
           skip_after_successful_duplicate: 'true'
-  build-and-test:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
-        with:
-          append-timestamp: false
-          create-symlink: true
-          # TODO key:
-          max-size: "2GB"
-          verbose: 2
   rocky9:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
