@@ -21,7 +21,9 @@ jobs:
             ccache-${{ github.job }}
           max-size: "2GB"
           verbose: 2
-      - name: stub
+      - name: Compile and test SST core and elements
         run: |
+          pwd
+          ls -al
           # TODO the argument does nothing as long as Spack is unavailable
           .github/scripts/core_autotools_noflags_nodeps.sh gcc
