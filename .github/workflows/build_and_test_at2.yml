@@ -42,3 +42,8 @@ jobs:
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
       ./.github/workflows/at2-rocky9-nompi.yml
+  rocky9-cmake:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+    uses:
+      ./.github/workflows/at2-rocky9-cmake.yml
