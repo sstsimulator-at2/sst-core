@@ -37,7 +37,7 @@ jobs:
 
       - name: Install system-level dependencies
         run: |
-          ./.github/scripts/install_os_level_dependencies.sh
+          sst-core/.github/scripts/install_os_level_dependencies.sh
 
       - name: Compile and test core
         run: |
