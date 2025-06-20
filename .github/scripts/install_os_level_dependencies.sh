@@ -33,6 +33,8 @@ elif command -v apt-get; then
 elif command -v pacman >/dev/null 2>&1; then
     pacman -Syu --noconfirm
     pacman -S --noconfirm \
+           autoconf \
+           automake \
            ccache \
            ncurses \
            python
