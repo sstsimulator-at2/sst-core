@@ -2,6 +2,9 @@
 
 # compilers.bash: Common logic for compiling SST, specifically setting up
 # compiler environment variables.
+#
+# Note: some variables appear unused because this file is sourced, not
+# executed, in order to avoid polluting the environment.
 
 set -eo pipefail
 
@@ -63,3 +66,11 @@ clean_suffix() {
 #         export INTEL_PIN_DIRECTORY
 #     fi
 # fi
+
+bear_make_install() {
+    if command -v bear >& /dev/null; then
+        "$(command -v bear)" -- make install -j"$(nproc)"
+    else
+        make install -j"$(nproc)"
+    fi
+}
