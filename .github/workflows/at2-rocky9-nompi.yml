@@ -54,3 +54,12 @@ jobs:
       - name: Test core
         run: |
           install_autotools_noflags_nodeps_nompi_gcc/bin/sst-test-core
+
+      - name: Compile elements
+        run: |
+          # TODO the argument does nothing as long as Spack is unavailable
+          sst-core/.github/scripts/elements_autotools_noflags_nodeps_nompi.sh gcc
+
+      - name: Test elements
+        run: |
+          install_autotools_noflags_nodeps_nompi_gcc/bin/sst-test-elements
