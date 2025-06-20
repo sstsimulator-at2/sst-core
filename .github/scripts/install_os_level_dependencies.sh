@@ -37,5 +37,6 @@ elif command -v pacman >/dev/null 2>&1; then
            automake \
            ccache \
            ncurses \
+           openmpi \
            python
 fi
