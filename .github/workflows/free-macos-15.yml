@@ -1,5 +1,5 @@
 ---
-name: macos-14
+name: macos-15
 
 on:
   workflow_call:
@@ -8,7 +8,7 @@ permissions: {}
 
 jobs:
   build-and-test:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
 
       - name: Clone core
