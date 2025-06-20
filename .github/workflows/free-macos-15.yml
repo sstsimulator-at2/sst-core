@@ -1,5 +1,5 @@
 ---
-name: macos-15
+name: Build/test on macOS 15
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ on:
 permissions: {}
 
 jobs:
-  build-and-test:
+  macos-15:
     runs-on: macos-15
     steps:
 
