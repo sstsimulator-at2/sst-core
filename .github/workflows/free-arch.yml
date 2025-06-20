@@ -13,6 +13,10 @@ jobs:
       image: archlinux:base-20250615.0.365905@sha256:1a39198fcde68348c49a3fd78a54ced553af8168252c6222451f3fe943a4f7ec
     steps:
 
+      - name: Install git
+        run: |
+          pacman -S --noconfirm git
+
       - name: Clone core
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -27,6 +31,10 @@ jobs:
           ref: devel
           repository: sstsimulator-at2/sst-elements
 
+      - name: Install system-level dependencies
+        run: |
+          sst-core/.github/scripts/install_os_level_dependencies.sh
+
       - name: Install and configure ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
         with:
@@ -36,10 +44,6 @@ jobs:
             ccache-${{ github.job }}
           max-size: "2GB"
           verbose: 2
-
-      - name: Install system-level dependencies
-        run: |
-          sst-core/.github/scripts/install_os_level_dependencies.sh
 
       - name: Compile core
         run: |

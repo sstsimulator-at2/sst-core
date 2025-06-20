@@ -25,6 +25,10 @@ jobs:
           ref: devel
           repository: sstsimulator-at2/sst-elements
 
+      - name: Install system-level dependencies
+        run: |
+          sst-core/.github/scripts/install_os_level_dependencies.sh
+
       - name: Install and configure ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
         with:
@@ -34,10 +38,6 @@ jobs:
             ccache-${{ github.job }}
           max-size: "2GB"
           verbose: 2
-
-      - name: Install system-level dependencies
-        run: |
-          sst-core/.github/scripts/install_os_level_dependencies.sh
 
       - name: Compile core
         run: |
