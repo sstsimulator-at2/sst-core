@@ -13,7 +13,7 @@ jobs:
       - sst-rocky9
     steps:
 
-      - name: checkout
+      - name: Clone core
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
@@ -28,7 +28,8 @@ jobs:
           max-size: "2GB"
           verbose: 2
 
-      - name: Compile and test SST core and elements
+      - name: Compile and test core
         run: |
+          cd "${GITHUB_WORKSPACE}"
           # TODO the argument does nothing as long as Spack is unavailable
-          .github/scripts/core_autotools_noflags_nodeps_nompi.sh gcc
+          sst-core/.github/scripts/core_autotools_noflags_nodeps_nompi.sh gcc
