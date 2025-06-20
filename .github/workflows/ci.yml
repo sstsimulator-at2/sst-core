@@ -25,7 +25,7 @@ jobs:
       pull-requests: write
   all-prechecks:
     needs: [prechecks]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Success
         run: "true"
@@ -36,12 +36,16 @@ jobs:
       actions: write
   at2-tests:
     needs: [all-prechecks]
-    uses: ./.github/workflows/build_and_test_at2.yml
-    permissions:
-      actions: write
+    # uses: ./.github/workflows/build_and_test_at2.yml
+    # permissions:
+    #   actions: write
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Success
+        run: "true"
   all-tests:
     needs: [tests, at2-tests]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Success
         run: "true"

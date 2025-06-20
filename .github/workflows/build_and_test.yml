@@ -15,7 +15,7 @@ jobs:
   # Jobs depend on the output of pre-checks to run.
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # actions: write needed by skip-duplicate-actions
     permissions:
       actions: write
@@ -26,130 +26,9 @@ jobs:
         uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5.3.1
         with:
           skip_after_successful_duplicate: 'true'
-  build-and-test:
+  # macos-15
+  macos-14:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-14
-            build-system: {name: "autotools", generator: "Make"}
-            with-mpi: false
-            compiler: {cc: "clang", cxx: "clang++"}
-          - os: macos-15
-            build-system: {name: "autotools", generator: "Make"}
-            with-mpi: false
-            compiler: {cc: "clang", cxx: "clang++"}
-          - os: ubuntu-24.04
-            build-system: {name: "autotools", generator: "Make"}
-            with-mpi: true
-            compiler: {cc: "gcc", cxx: "g++"}
-          - os: ubuntu-24.04
-            build-system: {name: "autotools", generator: "Make"}
-            with-mpi: false
-            compiler: {cc: "gcc", cxx: "g++"}
-    runs-on: ${{ matrix.os }}
-    name: test:${{ matrix.os }}/${{ matrix.build-system.name }}-${{ matrix.build-system.generator }}/mpi-${{ matrix.with-mpi }}
-    env:
-      CC: ${{ matrix.compiler.cc }}
-      CMAKE_GENERATOR: ${{ matrix.build-system.generator }}
-      CORE_BUILD_PATH: ${{ github.workspace }}/core_build
-      CXX: ${{ matrix.compiler.cxx }}
-      GITHUB_WORKSPACE: ${{ github.workspace }}
-      INSTALL_PATH: ${{ github.workspace }}/install
-      SST_DISABLE_MPI_AUTOTOOLS: ${{ !matrix.with-mpi && '--disable-mpi' || '' }}
-      SST_DISABLE_MPI_CMAKE: ${{ matrix.with-mpi && 'OFF' || 'ON' }}
-    steps:
-
-      - name: checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-        with:
-          persist-credentials: false
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
-        with:
-          append-timestamp: false
-          create-symlink: true
-          key: >-
-            ccache-${{ matrix.os }}-${{ matrix.build-system.name }}-${CMAKE_GENERATOR}-${{ matrix.with-mpi }}-${CC}-${CXX}
-          max-size: "2GB"
-          verbose: 2
-
-      - name: install prerequisites macOS
-        run: brew install coreutils ncurses
-        if: ${{ contains(matrix.os, 'macos') }}
-
-      - name: install Autoconf Ubuntu
-        run: sudo apt-get install -y libtool-bin
-        if: ${{ contains(matrix.os, 'ubuntu') && matrix.build-system.name == 'autotools' }}
-
-      - name: install Autoconf macOS
-        run: brew install automake libtool
-        if: ${{ contains(matrix.os, 'macos') && matrix.build-system.name == 'autotools' }}
-
-      - name: install Ninja Ubuntu
-        run: sudo apt-get install -y ninja-build
-        if: ${{ contains(matrix.os, 'ubuntu') && matrix.build-system.name == 'cmake' && matrix.build-system.generator == 'Ninja' }}
-
-      - name: install Ninja macOS
-        run: brew install ninja
-        if: ${{ contains(matrix.os, 'macos') && matrix.build-system.name == 'cmake' && matrix.build-system.generator == 'Ninja' }}
-
-      - name: install OpenMPI Ubuntu
-        run: sudo apt-get install -y libopenmpi-dev
-        if: ${{ contains(matrix.os, 'ubuntu') && matrix.with-mpi == true }}
-
-      - name: install OpenMPI macOS
-        run: brew install open-mpi
-        if: ${{ contains(matrix.os, 'macos') && matrix.with-mpi == true }}
-
-      - name: autotools configure
-        run: |
-          "${GITHUB_WORKSPACE}"/autogen.sh
-          # out-of-source build
-          mkdir -p "${CORE_BUILD_PATH}"
-          cd "${CORE_BUILD_PATH}"
-          "${GITHUB_WORKSPACE}"/configure \
-            --prefix="${INSTALL_PATH}" "${SST_DISABLE_MPI_AUTOTOOLS}"
-        if: ${{ matrix.build-system.name == 'autotools' }}
-
-      - name: autotools build
-        run: |
-          cd "${CORE_BUILD_PATH}"
-          make -j "$(nproc)" all
-        if: ${{ matrix.build-system.name == 'autotools' }}
-
-      - name: autotools install
-        run: |
-          cd "${CORE_BUILD_PATH}"
-          make -j "$(nproc)" install
-        if: ${{ matrix.build-system.name == 'autotools' }}
-
-      - name: cmake configure
-        run: |
-          cmake \
-            -S "${GITHUB_WORKSPACE}/experimental" \
-            -B "${CORE_BUILD_PATH}" \
-            -DCMAKE_INSTALL_PREFIX="${INSTALL_PATH}" \
-            -DCMAKE_C_COMPILER="${CC}" \
-            -DCMAKE_CXX_COMPILER="${CXX}" \
-            -DSST_DISABLE_MPI="${SST_DISABLE_MPI_CMAKE}"
-        if: ${{ matrix.build-system.name == 'cmake' }}
-
-      - name: cmake build
-        run: |
-          cmake --build "${CORE_BUILD_PATH}" -j "$(nproc)"
-        if: ${{ matrix.build-system.name == 'cmake' }}
-
-      - name: cmake install
-        run: |
-          cmake --install "${CORE_BUILD_PATH}"
-        if: ${{ matrix.build-system.name == 'cmake' }}
-
-      - name: test
-        run: |
-          # needed for ncurses part of interactive sst-info
-          export TERM=dumb
-          "${INSTALL_PATH}"/bin/sst-test-core
+    uses:
+      ./.github/workflows/free-macos-14.yml

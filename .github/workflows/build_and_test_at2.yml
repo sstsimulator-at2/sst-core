@@ -1,13 +1,8 @@
 ---
 name: AT2
 
+# yamllint disable-line rule:truthy
 on:
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - synchronize
-  #   branches:
-  #     - devel
   workflow_call:
 
 permissions: {}
@@ -21,7 +16,7 @@ jobs:
   # Jobs depend on the output of pre-checks to run.
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # actions: write needed by skip-duplicate-actions
     permissions:
       actions: write
