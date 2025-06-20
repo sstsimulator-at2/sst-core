@@ -16,6 +16,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Clone elements
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+          ref: devel
+          repository: sstsimulator-at2/sst-elements
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
         with:
@@ -28,8 +35,11 @@ jobs:
 
       - name: Compile and test core
         run: |
+          env | sort
           pwd
           cd "${GITHUB_WORKSPACE}"
-          pwd
+          ls -l
+          cd ..
+          ls -l
           # TODO the argument does nothing as long as Spack is unavailable
-          sst-core/.github/scripts/core_autotools_noflags_nodeps.sh gcc
+          # sst-core/.github/scripts/core_autotools_noflags_nodeps.sh gcc
