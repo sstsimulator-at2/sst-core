@@ -28,4 +28,9 @@ elif command -v apt-get; then
          libtool-bin \
          python3-blessings \
          python3-pygments
+elif command -v pacman >/dev/null 2>&1; then
+    pacman -Syu --noconfirm
+    pacman -S --noconfirm \
+           python \
+           python-blessings
 fi

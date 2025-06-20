@@ -1,0 +1,51 @@
+---
+name: Build/test on Arch Linux
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  arch:
+    runs-on: ubuntu-24.04
+    container:
+      image: archlinux:base-20250615.0.365905@sha256:1a39198fcde68348c49a3fd78a54ced553af8168252c6222451f3fe943a4f7ec
+    steps:
+
+      - name: Clone core
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          path: sst-core
+          persist-credentials: false
+
+      - name: Clone elements
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          path: sst-elements
+          persist-credentials: false
+          ref: devel
+          repository: sstsimulator-at2/sst-elements
+
+      - name: Install and configure ccache
+        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
+        with:
+          append-timestamp: false
+          create-symlink: true
+          key: >-
+            ccache-${{ github.job }}
+          max-size: "2GB"
+          verbose: 2
+
+      - name: Install system-level dependencies
+        run: |
+          sst-core/.github/scripts/install_os_level_dependencies.sh
+
+      - name: Compile core
+        run: |
+          # TODO the argument does nothing as long as Spack is unavailable
+          sst-core/.github/scripts/core_autotools_noflags_nodeps.sh gcc
+
+      - name: Test core
+        run: |
+          install_autotools_noflags_nodeps_gcc/bin/sst-test-core

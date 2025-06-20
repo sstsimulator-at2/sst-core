@@ -26,6 +26,11 @@ jobs:
         uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5.3.1
         with:
           skip_after_successful_duplicate: 'true'
+  arch:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      ./.github/workflows/free-arch.yml
   macos-14:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
