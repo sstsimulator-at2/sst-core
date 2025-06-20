@@ -39,7 +39,11 @@ jobs:
         run: |
           sst-core/.github/scripts/install_os_level_dependencies.sh
 
-      - name: Compile and test core
+      - name: Compile core
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
           sst-core/.github/scripts/core_autotools_noflags_nodeps.sh gcc
+
+      - name: Test core
+        run: |
+          install_autotools_noflags_nodeps_gcc/bin/sst-test-core
