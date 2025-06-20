@@ -18,6 +18,9 @@ if command -v brew; then
          open-mpi \
          pygments
     python -m pip install blessings
+# elif command -v dnf >/dev/null 2>&1; then
+#     dnf upgrade -y
+#     dnf install -y \
 elif command -v apt-get; then
     export DEBIAN_FRONTEND=noninteractive
     sudo apt-get -y update
@@ -33,6 +36,6 @@ elif command -v pacman >/dev/null 2>&1; then
     pacman -Syu --noconfirm
     pacman -S --noconfirm \
            ccache \
+           ncurses \
            python \
-           python-blessings
 fi
