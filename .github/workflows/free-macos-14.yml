@@ -39,6 +39,11 @@ jobs:
           max-size: "2GB"
           verbose: 2
 
+      - name: Set environment variables
+        run: |
+          echo "MAKEFLAGS=\"j$(nproc)\"" >> "${GITHUB_ENV}"
+          echo "TERM=dumb" >> "${GITHUB_ENV}"
+
       - name: Compile core
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
