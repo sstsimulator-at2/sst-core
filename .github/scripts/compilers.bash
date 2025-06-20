@@ -14,15 +14,17 @@ set -eo pipefail
 source_compilers_nompi() {
     local spack_compiler_spec="${1}"
 
-    SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    # SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
     # TODO need to install Spack first.
     # local compiler_paths
     # compiler_paths="$(spack python "${SCRIPTDIR}"/spack_get_compilers.py --spec "${spack_compiler_spec}")"
     # CC="$(echo "${compiler_paths}" | jq -r .c)"
     # CXX="$(echo "${compiler_paths}" | jq -r .cxx)"
-    export CC="$(command -v gcc)"
-    export CXX="$(command -v g++)"
+    CC="$(command -v gcc)"
+    CXX="$(command -v g++)"
+    export CC
+    export CXX
 
     if [[ -n "${CLANG_LIBCXX}" ]]; then
         export CXXFLAGS="-stdlib=libc++"
@@ -37,16 +39,18 @@ source_compilers_mpi() {
 
     source_compilers_nompi "${spack_compiler_spec}"
 
-    local ompi_version="4.1.5"
-    local ompi_loc
+    # local ompi_version="4.1.5"
+    # local ompi_loc
     # shellcheck disable=SC2086
     # TODO need to install Spack first.
     # ompi_loc="$(spack location -i openmpi@${ompi_version} %${spack_compiler_spec})"
     # export MPICC="${ompi_loc}"/bin/mpicc
     # export MPICXX="${ompi_loc}"/bin/mpicxx
     # export CPPFLAGS="-I${ompi_loc}/include"
-    export MPICC="$(command -v mpicc)"
-    export MPICXX="$(command -v mpicxx)"
+    MPICC="$(command -v mpicc)"
+    MPICXX="$(command -v mpicxx)"
+    export MPICC
+    export MPICXX
 }
 
 # delete '@' and '=' characters if present
