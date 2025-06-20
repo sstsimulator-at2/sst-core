@@ -48,7 +48,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "MAKEFLAGS=\"j$(nproc)\"" >> "${GITHUB_ENV}"
+          MAKEFLAGS="-j$(nproc)"
+          echo "MAKEFLAGS=${MAKEFLAGS}" >> "${GITHUB_ENV}"
           echo "TERM=dumb" >> "${GITHUB_ENV}"
 
       - name: Compile core

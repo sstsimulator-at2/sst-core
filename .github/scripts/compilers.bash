@@ -73,8 +73,8 @@ clean_suffix() {
 
 bear_make_install() {
     if command -v bear >& /dev/null; then
-        "$(command -v bear)" -- make install -j"$(nproc)"
+        "$(command -v bear)" -- make install
     else
-        make install -j"$(nproc)"
+        make install
     fi
 }
