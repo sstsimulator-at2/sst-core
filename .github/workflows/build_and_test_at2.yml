@@ -42,11 +42,11 @@ jobs:
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
       ./.github/workflows/at2-rocky9-nompi.yml
-  rocky9-cmake:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
-    uses:
-      ./.github/workflows/at2-rocky9-cmake.yml
+  # rocky9-cmake:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-rocky9-cmake.yml
   # rocky9-clang:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
@@ -67,11 +67,11 @@ jobs:
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     ./.github/workflows/at2-rocky9-mt-2.yml
-  # ubuntu2204:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
-  #   uses:
-  #     ./.github/workflows/at2-ubuntu2204.yml
+  ubuntu2204:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+    uses:
+      ./.github/workflows/at2-ubuntu2204.yml
   ubuntu2404:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
