@@ -1,0 +1,65 @@
+---
+name: ubuntu2404-nompi
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  ubuntu2404-nompi:
+    runs-on:
+      - self-hosted
+      - sst-ubuntu2404
+    steps:
+
+      - name: Clone core
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          path: sst-core
+          persist-credentials: false
+
+      - name: Clone elements
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          path: sst-elements
+          persist-credentials: false
+          ref: devel
+          repository: sstsimulator-at2/sst-elements
+
+      # There is no need to install additional system-level depdendencies, as
+      # they are all already in the image.
+
+      - name: Install and configure ccache
+        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
+        with:
+          append-timestamp: false
+          create-symlink: false
+          key: >-
+            ccache-${{ github.job }}
+          max-size: "2GB"
+          verbose: 2
+
+      - name: Set environment variables
+        run: |
+          MAKEFLAGS="-j$(nproc)"
+          echo "MAKEFLAGS=${MAKEFLAGS}" >> "${GITHUB_ENV}"
+          echo "TERM=dumb" >> "${GITHUB_ENV}"
+
+      - name: Compile core
+        run: |
+          # TODO the argument does nothing as long as Spack is unavailable
+          sst-core/.github/scripts/core_autotools_noflags_nodeps_nompi.sh gcc
+
+      - name: Test core
+        run: |
+          install_autotools_noflags_nodeps_nompi_gcc/bin/sst-test-core
+
+      - name: Compile elements
+        run: |
+          # TODO the argument does nothing as long as Spack is unavailable
+          sst-core/.github/scripts/elements_autotools_noflags_nodeps_nompi.sh gcc
+
+      - name: Test elements
+        run: |
+          install_autotools_noflags_nodeps_nompi_gcc/bin/sst-test-elements

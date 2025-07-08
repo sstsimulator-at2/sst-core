@@ -40,5 +40,6 @@ elif command -v pacman >/dev/null 2>&1; then
            make \
            ncurses \
            openmpi \
-           python
+           python \
+           wget
 fi
