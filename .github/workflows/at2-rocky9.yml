@@ -42,7 +42,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          MAKEFLAGS="-j$(nproc)"
+          MAKEFLAGS="-j4"
           echo "MAKEFLAGS=${MAKEFLAGS}" >> "${GITHUB_ENV}"
           echo "TERM=dumb" >> "${GITHUB_ENV}"
 
