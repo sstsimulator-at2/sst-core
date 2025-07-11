@@ -1,5 +1,5 @@
 ---
-name: Build/test on macOS 14
+name: Build/test on Rocky Linux 8
 
 on:
   workflow_call:
@@ -7,8 +7,10 @@ on:
 permissions: {}
 
 jobs:
-  macos-14:
-    runs-on: macos-14
+  rocky8:
+    runs-on: ubuntu-24.04
+    container:
+      image: rockylinux/rockylinux:8.10.20240528-minimal
     steps:
 
       - name: Clone core
@@ -57,7 +59,7 @@ jobs:
       - name: Save sst_test_outputs after core tests
         uses: actions/upload-artifact@v4
         with:
-          name: sst_test_outputs_core_free-macos-14
+          name: sst_test_outputs_core_free-rocky8
           path: sst_test_outputs
           compression-level: 9
           if-no-files-found: error
@@ -76,7 +78,7 @@ jobs:
       - name: Save sst_test_outputs after elements tests
         uses: actions/upload-artifact@v4
         with:
-          name: sst_test_outputs_elements_free-macos-14
+          name: sst_test_outputs_elements_free-rocky8
           path: sst_test_outputs
           compression-level: 9
           if-no-files-found: error
