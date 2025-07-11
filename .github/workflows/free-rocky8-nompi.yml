@@ -15,8 +15,8 @@ jobs:
 
       - name: Install git
         run: |
-          dnf -y upgrade
-          dny -y install git
+          yum -y upgrade
+          yum -y install git
 
       - name: Clone core
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
