@@ -69,6 +69,7 @@ jobs:
           compression-level: 9
           if-no-files-found: error
           retention-days: 5
+        if: ${{ !cancelled() }}
 
       - name: Compile elements
         run: |
@@ -87,3 +88,4 @@ jobs:
           compression-level: 9
           if-no-files-found: error
           retention-days: 5
+        if: ${{ !cancelled() }}
