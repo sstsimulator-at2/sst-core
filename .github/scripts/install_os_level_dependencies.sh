@@ -23,16 +23,16 @@ elif command -v dnf >/dev/null 2>&1; then
     dnf install -y \
         ccache
 elif command -v apt-get; then
-    sudo apt-get -y update
-    sudo apt-get -y install \
-         autoconf \
-         automake \
-         ccache \
-         doxygen \
-         libopenmpi-dev \
-         libtool-bin \
-         python3-blessings \
-         python3-pygments
+    apt-get -y update
+    apt-get -y install \
+            autoconf \
+            automake \
+            ccache \
+            doxygen \
+            libopenmpi-dev \
+            libtool-bin \
+            python3-blessings \
+            python3-pygments
 elif command -v pacman >/dev/null 2>&1; then
     pacman -Syu --noconfirm
     pacman -S --noconfirm \
