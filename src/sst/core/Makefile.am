@@ -101,14 +101,19 @@ nobase_dist_sst_HEADERS = \
 	serialization/impl/serialize_adapter.h \
 	serialization/impl/serialize_array.h \
 	serialization/impl/serialize_atomic.h \
+	serialization/impl/serialize_bitset.h \
 	serialization/impl/ser_buffer_accessor.h \
 	serialization/impl/serialize_insertable.h \
+        serialization/impl/serialize_optional.h \
 	serialization/impl/serialize_tuple.h \
 	serialization/impl/serialize_utility.h \
+	serialization/impl/serialize_variant.h \
 	serialization/impl/mapper.h \
 	serialization/impl/packer.h \
 	serialization/impl/sizer.h \
 	serialization/impl/serialize_string.h \
+	serialization/impl/serialize_trivial.h \
+	serialization/impl/serialize_valarray.h \
 	serialization/impl/unpacker.h \
 	serialization/serializer.h \
 	serialization/serializer_fwd.h \
@@ -172,6 +177,7 @@ sst_core_sources = \
 	componentInfo.cc \
 	config.cc \
 	configBase.cc \
+	configBaseSer.cc \
 	configShared.cc \
 	configGraph.cc \
 	configGraphOutput.cc \
@@ -198,7 +204,6 @@ sst_core_sources = \
 	mempool.cc \
 	mempoolAccessor.h \
 	namecheck.cc \
-	oneshot.cc \
 	output.cc \
 	params.cc \
 	pollingLinkQueue.cc \
@@ -217,14 +222,20 @@ sst_core_sources = \
 	module.cc \
 	realtime.cc \
 	sstpart.cc \
+	sst_types.cc \
 	timeVortex.cc \
+	timingOutput.h \
+	timingOutput.cc \
 	serialization/objectMap.cc \
 	serialization/serializable_base.cc \
 	serialization/serializable.cc \
 	serialization/serializer.cc \
+	serialization/impl/packer.cc \
+	serialization/impl/unpacker.cc \
 	serialization/statics.cc \
 	serialization/impl/mapper.cc \
 	serialization/impl/serialize_array.cc \
+	serialization/impl/serialize_trivial.cc \
 	sstinfo.h \
 	interfaces/TestEvent.cc \
 	interfaces/stdMem.cc \
@@ -261,6 +272,7 @@ sst_info_SOURCES = \
 	bootshared.h \
 	configBase.h \
 	configBase.cc \
+	configBaseSerEmpty.cc \
 	configShared.h \
 	configShared.cc \
 	env/envquery.h \
@@ -274,6 +286,7 @@ sst_SOURCES = \
 	bootshared.h \
 	configBase.h \
 	configBase.cc \
+	configBaseSerEmpty.cc \
 	configShared.h \
 	configShared.cc \
 	env/envquery.h \
