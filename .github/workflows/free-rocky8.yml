@@ -10,7 +10,7 @@ jobs:
   rocky8:
     runs-on: ubuntu-24.04
     container:
-      image: rockylinux/rockylinux:8.10.20240528-minimal
+      image: rockylinux/rockylinux:8.10.20240528
     steps:
 
       - name: Install git
