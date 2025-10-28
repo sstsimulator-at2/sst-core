@@ -1,5 +1,5 @@
 ---
-name: rocky9
+name: Build/test on Arch Linux
 
 on:
   workflow_call:
@@ -7,11 +7,16 @@ on:
 permissions: {}
 
 jobs:
-  rocky9:
-    runs-on:
-      - self-hosted
-      - sst-rocky9
+  arch:
+    runs-on: ubuntu-24.04
+    container:
+      image: archlinux:base-20250615.0.365905@sha256:1a39198fcde68348c49a3fd78a54ced553af8168252c6222451f3fe943a4f7ec
     steps:
+
+      - name: Install git
+        run: |
+          pacman -Sy --noconfirm
+          pacman -S --noconfirm git
 
       - name: Clone core
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -27,14 +32,15 @@ jobs:
           ref: devel
           repository: sstsimulator-at2/sst-elements
 
-      # There is no need to install additional system-level depdendencies, as
-      # they are all already in the image.
+      - name: Install system-level dependencies
+        run: |
+          sst-core/.github/scripts/install_os_level_dependencies.sh
 
       - name: Install and configure ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
         with:
           append-timestamp: false
-          create-symlink: false
+          create-symlink: true
           key: >-
             ccache-${{ github.job }}
           max-size: "2GB"
@@ -42,7 +48,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          MAKEFLAGS="-j4"
+          MAKEFLAGS="-j$(nproc)"
           echo "MAKEFLAGS=${MAKEFLAGS}" >> "${GITHUB_ENV}"
           echo "TERM=dumb" >> "${GITHUB_ENV}"
 
@@ -55,6 +61,16 @@ jobs:
         run: |
           install_autotools_noflags_nodeps_gcc/bin/sst-test-core
 
+      - name: Save sst_test_outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sst_test_outputs_core_free-arch
+          path: sst_test_outputs
+          compression-level: 9
+          if-no-files-found: error
+          retention-days: 5
+        if: ${{ !cancelled() }}
+
       - name: Compile elements
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
@@ -63,3 +79,13 @@ jobs:
       - name: Test elements
         run: |
           install_autotools_noflags_nodeps_gcc/bin/sst-test-elements
+
+      - name: Save sst_test_outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sst_test_outputs_elements_free-arch
+          path: sst_test_outputs
+          compression-level: 9
+          if-no-files-found: error
+          retention-days: 5
+        if: ${{ !cancelled() }}

@@ -1,5 +1,5 @@
 ---
-name: rocky9
+name: ubuntu2204
 
 on:
   workflow_call:
@@ -7,10 +7,10 @@ on:
 permissions: {}
 
 jobs:
-  rocky9:
+  ubuntu2204:
     runs-on:
       - self-hosted
-      - sst-rocky9
+      - sst-ubuntu2204
     steps:
 
       - name: Clone core

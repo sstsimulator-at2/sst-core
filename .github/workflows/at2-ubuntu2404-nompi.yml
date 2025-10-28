@@ -1,5 +1,5 @@
 ---
-name: rocky9
+name: ubuntu2404-nompi
 
 on:
   workflow_call:
@@ -7,10 +7,10 @@ on:
 permissions: {}
 
 jobs:
-  rocky9:
+  ubuntu2404-nompi:
     runs-on:
       - self-hosted
-      - sst-rocky9
+      - sst-ubuntu2404
     steps:
 
       - name: Clone core
@@ -49,17 +49,17 @@ jobs:
       - name: Compile core
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
-          sst-core/.github/scripts/core_autotools_noflags_nodeps.sh gcc
+          sst-core/.github/scripts/core_autotools_noflags_nodeps_nompi.sh gcc
 
       - name: Test core
         run: |
-          install_autotools_noflags_nodeps_gcc/bin/sst-test-core
+          install_autotools_noflags_nodeps_nompi_gcc/bin/sst-test-core
 
       - name: Compile elements
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
-          sst-core/.github/scripts/elements_autotools_noflags_nodeps.sh gcc
+          sst-core/.github/scripts/elements_autotools_noflags_nodeps_nompi.sh gcc
 
       - name: Test elements
         run: |
-          install_autotools_noflags_nodeps_gcc/bin/sst-test-elements
+          install_autotools_noflags_nodeps_nompi_gcc/bin/sst-test-elements

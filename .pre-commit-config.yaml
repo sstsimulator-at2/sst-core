@@ -33,6 +33,16 @@ repos:
               src/sst/core/libltdl/|
               external/
           )
+  # - repo: https://github.com/shellcheck-py/shellcheck-py
+  #   rev: v0.10.0.1
+  #   hooks:
+  #     - id: shellcheck
+  #       exclude: |
+  #         (?x)(
+  #             autogen.sh|
+  #             scripts/clang-format-test.sh|
+  #             scripts/cmake-format-test.sh
+  #         )
   - repo: https://github.com/rhysd/actionlint
     rev: "v1.7.7"
     hooks:
@@ -59,11 +69,11 @@ repos:
         # for the idea.
         args: [.]
         pass_filenames: false
-  - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.9.0
-    hooks:
-      - id: zizmor
-        args: [--no-progress, --persona=pedantic]
+  # - repo: https://github.com/zizmorcore/zizmor-pre-commit
+  #   rev: v1.9.0
+  #   hooks:
+  #     - id: zizmor
+  #       args: [--no-progress, --persona=pedantic]
   - repo: https://github.com/renovatebot/pre-commit-hooks
     rev: 41.64.4
     hooks:

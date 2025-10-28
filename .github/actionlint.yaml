@@ -1,4 +1,7 @@
 ---
 self-hosted-runner:
   labels:
+    - sst-rocky8
     - sst-rocky9
+    - sst-ubuntu2204
+    - sst-ubuntu2404

@@ -1,5 +1,5 @@
 ---
-name: rocky9
+name: rocky8
 
 on:
   workflow_call:
@@ -7,10 +7,10 @@ on:
 permissions: {}
 
 jobs:
-  rocky9:
+  rocky8:
     runs-on:
       - self-hosted
-      - sst-rocky9
+      - sst-rocky8
     steps:
 
       - name: Clone core

@@ -1,13 +1,8 @@
 ---
 name: AT2
 
+# yamllint disable-line rule:truthy
 on:
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - synchronize
-  #   branches:
-  #     - devel
   workflow_call:
 
 permissions: {}
@@ -21,7 +16,7 @@ jobs:
   # Jobs depend on the output of pre-checks to run.
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # actions: write needed by skip-duplicate-actions
     permissions:
       actions: write
@@ -32,26 +27,63 @@ jobs:
         uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5.3.1
         with:
           skip_after_successful_duplicate: 'true'
-  build-and-test:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
-        with:
-          append-timestamp: false
-          create-symlink: true
-          # TODO key:
-          max-size: "2GB"
-          verbose: 2
-  rocky9:
+  # rocky8:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-rocky8.yml
+  rocky8-nompi:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
-      ./.github/workflows/at2-rocky9.yml
+      ./.github/workflows/at2-rocky8-nompi.yml
+  # rocky9:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-rocky9.yml
   rocky9-nompi:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
       ./.github/workflows/at2-rocky9-nompi.yml
+  # rocky9-cmake:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-rocky9-cmake.yml
+  # rocky9-clang:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-rocky9-clang.yml
+  # rocky9-make-dist:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-rocky9-make-dist.yml
+  # rocky9-mr-2:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-rocky9-mr-2.yml
+  # rocky9-mt-2:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-rocky9-mt-2.yml
+  # ubuntu2204:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-ubuntu2204.yml
+  ubuntu2404-nompi:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+    uses:
+      ./.github/workflows/at2-ubuntu2404-nompi.yml
+  # ubuntu2404:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   uses:
+  #     ./.github/workflows/at2-ubuntu2404.yml

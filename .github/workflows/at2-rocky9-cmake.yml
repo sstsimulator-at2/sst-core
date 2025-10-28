@@ -1,5 +1,5 @@
 ---
-name: rocky9
+name: rocky9-cmake
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ on:
 permissions: {}
 
 jobs:
-  rocky9:
+  rocky9-cmake:
     runs-on:
       - self-hosted
       - sst-rocky9
@@ -49,17 +49,8 @@ jobs:
       - name: Compile core
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
-          sst-core/.github/scripts/core_autotools_noflags_nodeps.sh gcc
+          sst-core/.github/scripts/core_cmake_noflags_nodeps.sh gcc
 
       - name: Test core
         run: |
-          install_autotools_noflags_nodeps_gcc/bin/sst-test-core
-
-      - name: Compile elements
-        run: |
-          # TODO the argument does nothing as long as Spack is unavailable
-          sst-core/.github/scripts/elements_autotools_noflags_nodeps.sh gcc
-
-      - name: Test elements
-        run: |
-          install_autotools_noflags_nodeps_gcc/bin/sst-test-elements
+          install_cmake_noflags_nodeps_gcc/bin/sst-test-core
