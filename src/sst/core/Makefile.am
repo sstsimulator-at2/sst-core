@@ -78,10 +78,12 @@ nobase_dist_sst_HEADERS = \
 	math/sqrt.h \
 	uninitializedQueue.h \
 	unitAlgebra.h \
+	watchPoint.h \
 	eli/elementinfo.h \
 	eli/elibase.h \
 	eli/attributeInfo.h \
 	eli/categoryInfo.h \
+	eli/checkpointableInfo.h \
 	eli/defaultInfo.h \
 	eli/elementbuilder.h \
 	eli/interfaceInfo.h \
@@ -99,13 +101,18 @@ nobase_dist_sst_HEADERS = \
 	serialization/objectMap.h \
 	serialization/objectMapDeferred.h \
 	serialization/impl/serialize_adapter.h \
+	serialization/impl/serialize_aggregate.h \
 	serialization/impl/serialize_array.h \
+	serialization/impl/get_array_size.h \
 	serialization/impl/serialize_atomic.h \
 	serialization/impl/serialize_bitset.h \
 	serialization/impl/ser_buffer_accessor.h \
 	serialization/impl/serialize_insertable.h \
         serialization/impl/serialize_optional.h \
+        serialization/impl/ser_shared_ptr_tracker.h \
+        serialization/impl/serialize_shared_ptr.h \
 	serialization/impl/serialize_tuple.h \
+        serialization/impl/serialize_unique_ptr.h \
 	serialization/impl/serialize_utility.h \
 	serialization/impl/serialize_variant.h \
 	serialization/impl/mapper.h \
@@ -222,6 +229,7 @@ sst_core_sources = \
 	module.cc \
 	realtime.cc \
 	sstpart.cc \
+	sst_mpi.cc \
 	sst_types.cc \
 	timeVortex.cc \
 	timingOutput.h \
@@ -230,12 +238,13 @@ sst_core_sources = \
 	serialization/serializable_base.cc \
 	serialization/serializable.cc \
 	serialization/serializer.cc \
-	serialization/impl/packer.cc \
 	serialization/impl/unpacker.cc \
+	serialization/impl/ser_shared_ptr_tracker.cc \
 	serialization/statics.cc \
 	serialization/impl/mapper.cc \
 	serialization/impl/serialize_array.cc \
 	serialization/impl/serialize_trivial.cc \
+	serialization/impl/serialize_shared_ptr.cc \
 	sstinfo.h \
 	interfaces/TestEvent.cc \
 	interfaces/stdMem.cc \

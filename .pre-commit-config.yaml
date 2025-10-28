@@ -12,6 +12,14 @@ repos:
       - id: check-json
       - id: check-merge-conflict
       - id: check-yaml
+      - id: trailing-whitespace
+        # allow it in external dependencies and test references
+        exclude: |
+          (?x)(
+              src/sst/core/libltdl/|
+              external/|
+              tests/refFiles/
+          )
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: "v0.6.13"
     hooks:
@@ -50,7 +58,7 @@ repos:
         additional_dependencies:
           - "github.com/wasilibs/go-shellcheck/cmd/shellcheck@v0.10.0"
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.12.8"
+    rev: "v0.14.0"
     hooks:
       - id: ruff-check
   - repo: https://github.com/pre-commit/mirrors-mypy

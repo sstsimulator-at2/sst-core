@@ -18,6 +18,9 @@
 #include "sst/core/sst_mpi.h"
 #include "sst/core/stopAction.h"
 
+#include <cstdint>
+#include <mutex>
+
 using SST::Core::ThreadSafe::Spinlock;
 
 namespace SST {

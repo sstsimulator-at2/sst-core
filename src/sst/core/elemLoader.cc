@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
+#include <ostream>
 #include <vector>
 
 #ifdef HAVE_DLFCN_H
@@ -140,6 +141,11 @@ ElemLoader::ElemLoader(const std::string& searchPaths) :
 
 ElemLoader::~ElemLoader() {}
 
+void
+ElemLoader::updateSearchPaths(const std::string& paths)
+{
+    searchPaths = paths;
+}
 
 void
 ElemLoader::loadLibrary(const std::string& elemlib, std::ostream& err_os)

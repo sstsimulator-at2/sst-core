@@ -15,6 +15,12 @@
 
 #include "sst/core/stringize.h"
 
+#include <cerrno>
+#include <cinttypes>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+
 namespace SST::Statistics {
 
 StatisticOutputCSV::StatisticOutputCSV(Params& outputParameters) :

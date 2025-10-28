@@ -18,6 +18,7 @@
 #include "sst/core/rng/marsaglia.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 
 namespace SST::CoreTestComponent {
@@ -122,6 +123,8 @@ public:
     // Optional since there is nothing to document
     SST_ELI_DOCUMENT_SUBCOMPONENT_SLOTS(
     )
+
+    SST_ELI_IS_CHECKPOINTABLE()
 
     coreTestComponentExtMain(SST::ComponentId_t id, SST::Params& params);
     ~coreTestComponentExtMain();

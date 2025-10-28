@@ -16,6 +16,10 @@
 #include "sst/core/statapi/statoutputcsv.h"
 #include "sst/core/stringize.h"
 
+#include <cerrno>
+#include <cstddef>
+#include <cstdint>
+
 namespace SST::Statistics {
 
 StatisticOutputJSON::StatisticOutputJSON(Params& outputParameters) :

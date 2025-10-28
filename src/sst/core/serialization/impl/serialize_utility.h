@@ -21,6 +21,7 @@
 #include <cfloat>
 #include <complex>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 #include <utility>
 
@@ -50,6 +51,27 @@ constexpr bool is_same_type_template_v<T1<T1ARGS...>, T2> = is_same_template_v<T
 template <class T, template <class...> class TT>
 using is_same_type_template = std::bool_constant<is_same_type_template_v<T, TT>>;
 
+///////////////////////////////////////////////////////
+// Pre-C++20 is_unbounded_array trait implementation //
+///////////////////////////////////////////////////////
+#if __cplusplus < 202002l
+
+template <class T>
+constexpr bool is_unbounded_array_v = false;
+
+template <class T>
+constexpr bool is_unbounded_array_v<T[]> = true;
+
+template <class T>
+using is_unbounded_array = std::bool_constant<is_unbounded_array_v<T>>;
+
+#else
+
+using std::is_unbounded_array;
+using std::is_unbounded_array_v;
+
+#endif
+
 ///////////////////////////////////////////////////
 // Whether a type has a serialize_order() method //
 ///////////////////////////////////////////////////
@@ -59,7 +81,7 @@ struct has_serialize_order_impl : std::false_type
 {};
 
 template <class T>
-struct has_serialize_order_impl<T, decltype(std::declval<T>().serialize_order(std::declval<serializer&>()))> :
+struct has_serialize_order_impl<T, decltype(std::declval<T>().serialize_order(std::declval<class serializer&>()))> :
     std::true_type
 {};
 
@@ -67,17 +89,8 @@ struct has_serialize_order_impl<T, decltype(std::declval<T>().serialize_order(st
 // If serializable_base is a base class of T, we assume that T has a public serialize_order() method.
 // If serialize_order() is private or protected in a T derived from serializable_base, it will cause a
 // compile-time error in serialize_impl when invoking T{}.serialize_order() even though it's true here.
-#if defined(__GNUC__) && __GNUC__ < 12 && !defined(__llvm__) && !defined(__INTEL_COMPILER)
-
 template <class T>
 using has_serialize_order = std::disjunction<std::is_base_of<class serializable_base, T>, has_serialize_order_impl<T>>;
-
-#else
-
-template <class T>
-using has_serialize_order = has_serialize_order_impl<T>;
-
-#endif
 
 template <class T>
 constexpr bool has_serialize_order_v = has_serialize_order<T>::value;
@@ -227,6 +240,15 @@ inline constexpr bool is_trivially_serializable_v<long double _Complex, false> =
 #ifdef FLT16_MIN
 template <>
 inline constexpr bool is_trivially_serializable_v<_Float16, false> = true;
+#endif
+
+// 128-bit integers
+#ifdef __SIZEOF_INT128__
+template <>
+inline constexpr bool is_trivially_serializable_v<__int128, false> = true;
+
+template <>
+inline constexpr bool is_trivially_serializable_v<unsigned __int128, false> = true;
 #endif
 
 } // namespace pvt_trivial

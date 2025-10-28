@@ -24,17 +24,21 @@
 #include "sst/core/sst_types.h"
 #include "sst/core/statapi/statengine.h"
 #include "sst/core/unitAlgebra.h"
+#include "sst/core/util/basicPerf.h"
 #include "sst/core/util/filesystem.h"
 
 #include <atomic>
+#include <cstdint>
 #include <cstdio>
 #include <iostream>
 #include <map>
 #include <mutex>
 #include <set>
 #include <signal.h>
+#include <string>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 /* Forward declare for Friendship */
@@ -201,13 +205,15 @@ public:
     /** Sets an internal flag for signaling the simulation. Used by signal handler & thread 0. */
     static void notifySignal();
 
+    static void serializeSharedObjectManager(SST::Core::Serialization::serializer& ser);
+
+    /******** Core only API *************/
+
     /** Insert an activity to fire at a specified time */
     void insertActivity(SimTime_t time, Activity* ev);
 
     /** Return the exit event */
     Exit* getExit() const { return m_exit; }
-
-    /******** Core only API *************/
 
     /** Processes the ConfigGraph to pull out any need information
      * about relationships among the threads
@@ -412,8 +418,8 @@ public:
        Write the global data to a binary file and create the registry
        and write the header info
      */
-    void checkpoint_write_globals(
-        int checkpoint_id, const std::string& registry_filename, const std::string& globals_filename);
+    void checkpoint_write_globals(int checkpoint_id, const std::string& checkpoint_filename,
+        const std::string& registry_filename, const std::string& globals_filename);
     void restart();
 
     /**
@@ -422,7 +428,11 @@ public:
        between checkpoint and restart and the original rank info
        stored in the checkpoint should be used.
      */
-    RankInfo getRankForLinkOnRestart(int UNUSED(rank), uintptr_t UNUSED(tag)) { return RankInfo(); }
+    RankInfo getRankForLinkOnRestart(RankInfo rank, uintptr_t UNUSED(tag))
+    {
+        if ( serial_restart_ ) return RankInfo(0, 0);
+        return RankInfo(rank.rank, rank.thread);
+    }
 
     void initialize_interactive_console(const std::string& type);
 
@@ -443,6 +453,8 @@ public:
     static Core::ThreadSafe::Barrier exitBarrier;
     static Core::ThreadSafe::Barrier finishBarrier;
     static std::mutex                simulationMutex;
+
+    static Util::BasicPerfTracker basicPerf;
 
     // Support for crossthread links
     static Core::ThreadSafe::Spinlock cross_thread_lock;
@@ -503,6 +515,7 @@ public:
     RealTimeManager*        real_time_;
     std::string             interactive_type_  = "";
     std::string             interactive_start_ = "";
+    std::string             replay_file_       = "";
     InteractiveConsole*     interactive_       = nullptr;
     bool                    enter_interactive_ = false;
     std::string             interactive_msg_;
@@ -653,6 +666,7 @@ public:
     uint32_t                                   checkpoint_id_       = 0;
     std::string                                checkpoint_prefix_   = "";
     std::string                                globalOutputFileName = "";
+    bool                                       serial_restart_      = false;
 
     // Config object used by the simulation
     static Config       config;

@@ -27,15 +27,21 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <functional>
 #include <getopt.h>
+#include <iostream>
 #include <list>
+#include <ostream>
+#include <sstream>
 #include <string>
 #include <sys/stat.h>
+#include <utility>
 
 using namespace SST;
 using namespace SST::Core;
@@ -146,7 +152,7 @@ main(int argc, char* argv[])
     }
 
     // Process all specified libraries
-    g_searchPath = g_configuration.getLibPath();
+    g_searchPath = g_configuration.getLibPath(true);
     processSSTElementFiles();
 
     // Run interactive mode
@@ -169,7 +175,7 @@ main(int argc, char* argv[])
     }
 
     // Process all specified libraries
-    g_searchPath = g_configuration.getLibPath();
+    g_searchPath = g_configuration.getLibPath(true);
     processSSTElementFiles();
 
     // Run interactive mode

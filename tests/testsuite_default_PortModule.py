@@ -28,7 +28,7 @@ class testcase_PortModule(SSTTestCase):
         # Put test based teardown code here. it is called once after every test
         super(type(self), self).tearDown()
 
-    
+
     ### Non-checkpoint tests
     #### Non-SubCopmponent tests
     ##### Receive side tests
@@ -163,8 +163,8 @@ class testcase_PortModule(SSTTestCase):
 
     def test_PortModule_Checkpoint_randomdrop_send_sub(self) -> None:
         self.port_module_test_template("randomdrop", True, True, True)
-        
-        
+
+
 #####
     # testtype: which test to run
     # bind_on_send: Use send PortModules if set to True, recv PortModules, otherwise
@@ -181,10 +181,7 @@ class testcase_PortModule(SSTTestCase):
             bind_at = "recv"
 
         sdlfile = "{0}/test_PortModule.py".format(testsuitedir)
-        if testtype != "randomdrop":
-            reffile = "{0}/refFiles/test_PortModule_{1}.out".format(testsuitedir,testtype)
-        else:
-            reffile = "{0}/refFiles/test_PortModule_{1}_{2}.out".format(testsuitedir,testtype,bind_at)
+        reffile = "{0}/refFiles/test_PortModule_{1}_{2}.out".format(testsuitedir,testtype,bind_at)
 
         if use_subcomp:
             suffix = "{1}_{2}_subcomp".format(outdir,testtype,bind_at)
@@ -192,7 +189,7 @@ class testcase_PortModule(SSTTestCase):
         else:
             suffix = "{1}_{2}".format(outdir,testtype,bind_at)
             subcomp_str = ""
-            
+
         options = "--model-options=\"--{0} --{1}{2}\"".format(testtype,bind_at,subcomp_str)
 
         if checkpoint:
@@ -201,12 +198,12 @@ class testcase_PortModule(SSTTestCase):
         else:
             outfile = "{0}/test_PortModule_{1}.out".format(outdir,suffix)
 
-        
+
         self.run_sst(sdlfile, outfile, other_args=options)
 
         if not checkpoint:
             filter1 = StartsWithFilter("#")
-                
+
             cmp_result = testing_compare_filtered_diff("PortModule", outfile, reffile, True, filter1)
             if not cmp_result:
                 diffdata = testing_get_diff_data(testtype)
@@ -222,7 +219,7 @@ class testcase_PortModule(SSTTestCase):
 
             filter1 = IgnoreAllBeforeFilter("# Simulation Checkpoint:")
             filter1.apply_to_out_file = False
-                
+
             cmp_result = testing_compare_filtered_diff("PortModule", outfile, reffile, True, filter1)
             if not cmp_result:
                 diffdata = testing_get_diff_data(testtype)

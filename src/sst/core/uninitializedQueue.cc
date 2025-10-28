@@ -15,6 +15,8 @@
 
 #include "sst/core/warnmacros.h"
 
+#include <cstdlib>
+#include <iostream>
 #include <ostream>
 
 namespace SST {

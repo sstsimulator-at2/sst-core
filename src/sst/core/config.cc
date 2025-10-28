@@ -18,13 +18,17 @@
 #include "sst/core/unitAlgebra.h"
 #include "sst/core/warnmacros.h"
 
+#include <cerrno>
+#include <cstdint>
 #include <cstdlib>
+#include <functional>
 #include <getopt.h>
 #include <iostream>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 namespace SST {
 
@@ -80,7 +84,7 @@ Config::ext_help_timebase()
     msg.append("Time in SST core is represented by a 64-bit unsigned integer.  By default, each count of that "
                "value represents 1ps of time.  The timebase option allows you to set that atomic core timebase to "
                "a different value.\n ");
-    msg.append("There are two things to balance when determing a timebase to use:\n\n");
+    msg.append("There are two things to balance when determining a timebase to use:\n\n");
     msg.append("1) The shortest time period or fastest clock frequency you want to represent:\n");
     msg.append("  It is recommended that the core timebase be set to ~1000x smaller than the shortest time period "
                "(fastest frequency) in your simulation.  For the default 1ps timebase, clocks in the 1-10GHz range "
@@ -408,14 +412,19 @@ Config::insertOptions()
     addVerboseOptions(true);
     DEF_ARG("num-threads", 'n', "NUM", "Number of parallel threads to use per rank", num_threads_, true);
     DEF_ARG("sdl-file", 0, "FILE",
-        "Specify SST Configuration file.  Note: this is most often done by just specifying the file without an option."
-        " For runs specifying --load-checkpoint, the SDL file is the checkpoint manifest file (.sstcpt file)",
+        "Specify SST Configuration file.  Note: this is most often done by just specifying the file without an option. "
+        "The SDL file can be the manifest file from a checkpoint (*.sstcpt).",
         configFile_, false);
     DEF_ARG("model-options", 0, "STR",
         "Provide options to the python configuration script.  Additionally, any arguments provided after a final '-- ' "
         "will be appended to the model options (or used as the model options if --model-options was not specified).",
         model_options_, false, false, true);
-    DEF_FLAG_OPTVAL("print-timing-info", 0, "Print SST timing information", print_timing_, true, true, false);
+    DEF_ARG_OPTVAL("print-timing-info", 0, "LEVEL",
+        "Print SST timing information.  Can supply an optional level to control the granularity of timing information. "
+        "Level = 0 turns all timing info off, level = 1 will print total runtime, as well as other performance data. "
+        "Level >= 2 will print increasing granularity of performance data. If specified with no level, then the level "
+        "will be set to 2.",
+        print_timing_, true, true, false);
     DEF_ARG(
         "timing-info-json", 0, "FILE", "Write SST timing information in JSON format", timing_json_, true, true, false);
     DEF_ARG("stop-at", 0, "TIME", "Set time at which simulation will end execution", stop_at_, true, true, false);
@@ -468,8 +477,8 @@ Config::insertOptions()
     DEF_ARG("dot-verbosity", 0, "INT", "Amount of detail to include in the dot graph output", dot_verbosity_, true,
         false, true);
     DEF_ARG_OPTVAL("output-partition", 0, "FILE",
-        "File to write SST component partitioning information.  When used without an argument and in conjuction with "
-        "--output-json or --output-config options, will cause paritition information to be added to graph output.",
+        "File to write SST component partitioning information.  When used without an argument and in conjunction with "
+        "--output-json or --output-config options, will cause partition information to be added to graph output.",
         output_partition_, true, false, false);
 
     /* Advanced Features */
@@ -517,16 +526,18 @@ Config::insertOptions()
     DEF_SECTION_HEADING("Advanced Options - Debug");
     DEF_ARG("run-mode", 0, "MODE", "Set run mode [ init | run | both (default)]", runMode_, true, false, true);
     DEF_ARG("interactive-console", 0, "ACTION",
-        "[EXPERIMENTAL] Set console to use for interactive mode. NOTE: This currently only works for serial jobs and "
-        "this option will be ignored for parallel runs.",
+        "[EXPERIMENTAL] Set console to use for interactive mode (overrides default console: "
+        "sst.interactive.simpledebug). "
+        "NOTE: This currently only works for serial jobs and will be ignored for parallel runs.",
         interactive_console_, true, false, false);
     DEF_ARG_OPTVAL("interactive-start", 0, "TIME",
         "[EXPERIMENTAL] Drop into interactive mode at specified simulated time.  If no time is specified, or the time "
-        "is 0, then it will "
-        "drop into interactive mode before any events are processed in the main run loop. This option is ignored if no "
-        "interactive console was set. NOTE: This currently only works for serial jobs and this option will be ignored "
+        "is 0, then it will drop into interactive mode before any events are processed in the main run loop. "
+        "NOTE: This currently only works for serial jobs and this option will be ignored "
         "for parallel runs.",
         interactive_start_time_, true, false, false);
+    DEF_ARG("replay-file", 0, "FILE", "Specify file for replaying an interactive debug console session.", replay_file_,
+        false);
 #ifdef USE_MEMPOOL
     DEF_ARG("output-undeleted-events", 0, "FILE",
         "file to write information about all undeleted events at the end of simulation (STDOUT and STDERR can be used "
@@ -552,6 +563,10 @@ Config::insertOptions()
 
     /* Advanced Features - Checkpoint */
     DEF_SECTION_HEADING("Advanced Options - Checkpointing (EXPERIMENTAL)");
+    DEF_FLAG("checkpoint-enable", 0,
+        "Allows checkpoints to be triggered from the interactive debug console. "
+        "This option is not needed if checkpoint-wall-period, checkpoint-period, or checkpoint-sim-period are used.",
+        checkpoint_enable_, false, false, false);
     DEF_ARG("checkpoint-wall-period", 0, "PERIOD",
         "Set approximate frequency for checkpoints to be generated in terms of wall (real) time. PERIOD can be "
         "specified in hours, minutes, and seconds with "
@@ -568,8 +583,9 @@ Config::insertOptions()
         "time units (s or Hz) and SI prefixes are accepted.",
         checkpoint_sim_period_, true, false, false);
     DEF_FLAG("load-checkpoint", 0,
-        "Load checkpoint and continue simulation. Specified SDL file will be used as the checkpoint file.",
-        load_from_checkpoint_, false, false, false);
+        "[UNUSED] This options is no longer needed.  SST will automatically detect if a checkpoint file is specified "
+        "as the SDL file by detecting the .sstcpt extension.",
+        load_from_checkpoint_, true, false, false);
     DEF_ARG("checkpoint-prefix", 0, "PREFIX",
         "Set prefix for checkpoint filenames. The checkpoint prefix defaults to checkpoint if this option is not set "
         "and checkpointing is enabled.",
@@ -641,6 +657,7 @@ Config::setOptionFromModel(const std::string& entryName, const std::string& valu
 bool
 Config::canInitiateCheckpoint()
 {
+    if ( checkpoint_enable_.value == true ) return true;
     if ( checkpoint_wall_period_.value != 0 ) return true;
     if ( checkpoint_sim_period_.value != "" ) return true;
     return false;

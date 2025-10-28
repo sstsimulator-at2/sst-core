@@ -15,6 +15,14 @@ import sys
 sst.setProgramOption("stop-at", "10us")
 #sst.setProgramOption("verbose", "3")
 
+### Arguments
+## [1] - X dimension, required
+## [2] - Y dimension, required
+## [3] - Factor to reduce initial messages by, optional
+## [4] - Verbose output, optional
+## [5] - Number of stats to register, optional
+## [6] - Whether to enable stat output (0=disable, 1=dump-at-end, 2=dump at rate), optional
+
 x_size = int(sys.argv[1])
 y_size = int(sys.argv[2])
 
@@ -26,10 +34,19 @@ verbose = True
 if len(sys.argv) > 4:
     verbose = int(sys.argv[4])
 
+stats = 0
+if len(sys.argv) > 5:
+    stats = int(sys.argv[5])
+
+stat_gen = 0 # No enable
+if len(sys.argv) > 6:
+    stat_gen = int(sys.argv[6])
+
+#print("stats={}, gen={}".format(stats, stat_gen))
 
 # Calculate number of routers and endpoints
 num_routers = x_size * y_size
-        
+
 # Set up a map of links with accessor
 links = dict()
 def getLink(leftName: str, rightName: str) -> sst.Link:
@@ -37,7 +54,7 @@ def getLink(leftName: str, rightName: str) -> sst.Link:
     if name not in links:
         links[name] = sst.Link(name)
     return links[name]
-        
+
 for i in range(num_routers):
     my_x = i % x_size
     my_y = i // x_size
@@ -47,17 +64,18 @@ for i in range(num_routers):
     comp.addParam("id",i)
     comp.addParam("mod",mod)
     comp.addParam("verbose",verbose)
+    comp.addParam("stats", stats)
 
-    # Setup up all the ports.  X ports will use MessagePort directly, Y ports, will use the SlotPort
+    # Setup up all the ports. X ports will use MessagePort directly, Y ports, will use the SlotPort
     port_x_pos = comp.setSubComponent("ports","coreTestElement.message_mesh.message_port",0);
     port_x_neg = comp.setSubComponent("ports","coreTestElement.message_mesh.message_port",1);
 
     tmp = comp.setSubComponent("ports","coreTestElement.message_mesh.port_slot",2);
     port_y_pos = tmp.setSubComponent("port","coreTestElement.message_mesh.message_port");
-    
+
     tmp = comp.setSubComponent("ports","coreTestElement.message_mesh.port_slot",3);
     port_y_neg = tmp.setSubComponent("port","coreTestElement.message_mesh.message_port");
-    
+
     # Setup the route subcomponent
     route = comp.setSubComponent("route","coreTestElement.message_mesh.route_message")
 
@@ -73,7 +91,7 @@ for i in range(num_routers):
     # Set the nocut attribute on positive x-link on every other router
     if ( i % 2 == 0):
         getLink("x%dy%d"%(my_x,my_y), "x%dy%d"%(their_x,my_y)).setNoCut()
-    
+
     # Negative
     their_x = my_x - 1
     if their_x == -1:
@@ -96,5 +114,8 @@ for i in range(num_routers):
 
 
 sst.setStatisticOutput("sst.statOutputCSV")
-sst.enableAllStatisticsForAllComponents()
+if stat_gen == 2:
+    sst.enableAllStatisticsForAllComponents({"rate" : "250ns"})
+elif stat_gen == 1:
+    sst.enableAllStatisticsForAllComponents()
 sst.setStatisticLoadLevel(2)

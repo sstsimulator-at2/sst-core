@@ -17,6 +17,8 @@
 #include "sst/core/sst_types.h"
 
 // Pull in the patchlevel for Python so we can check Python version
+#include <cstddef>
+#include <cstdio>
 #include <patchlevel.h>
 #include <string>
 
@@ -49,7 +51,7 @@ int check_unitalgebra_store_string(std::string valid_units, std::string& var, st
 class Config : public ConfigShared, public SST::Core::Serialization::serializable
 {
 
-private:
+public:
     // Main creates the config object
     friend int ::main(int argc, char** argv);
     friend class SSTModelDescription;
@@ -60,6 +62,7 @@ private:
      */
     Config();
 
+private:
     /**
        Initial Config object created with default constructor
      */
@@ -181,7 +184,8 @@ private:
     /**
        Print SST timing information after the run
     */
-    SST_CONFIG_DECLARE_OPTION(bool, print_timing, false, &StandardConfigParsers::flag_default_true);
+    SST_CONFIG_DECLARE_OPTION(int, print_timing, 0,
+        std::bind(&StandardConfigParsers::from_string_default<int>, std::placeholders::_1, std::placeholders::_2, 2));
 
     /**
         Print SST timing information to JSON file
@@ -508,6 +512,10 @@ private:
         std::bind(&StandardConfigParsers::from_string_default<std::string>, std::placeholders::_1,
             std::placeholders::_2, "0"));
 
+    /**
+       File to replay an interactive console script
+    */
+    SST_CONFIG_DECLARE_OPTION(std::string, replay_file, "", &StandardConfigParsers::from_string<std::string>);
 
 #ifdef USE_MEMPOOL
     /**
@@ -574,6 +582,11 @@ private:
     /**** Advanced options - Checkpointing ****/
 
     /**
+     * Enable checkpointing for interactive debug
+     */
+    SST_CONFIG_DECLARE_OPTION(bool, checkpoint_enable, 0, &StandardConfigParsers::flag_set_true);
+
+    /**
      * Interval at which to create a checkpoint in wall time
      */
     SST_CONFIG_DECLARE_OPTION(uint32_t, checkpoint_wall_period, 0, &StandardConfigParsers::wall_time_to_seconds);
@@ -617,10 +630,11 @@ public:
     /** Print to stdout the current configuration */
     void print();
 
+    void merge_checkpoint_options(Config& other);
+
     void serialize_order(SST::Core::Serialization::serializer& ser) override;
     ImplementSerializable(SST::Config);
 
-    void merge_checkpoint_options(Config& other);
 
 protected:
     std::string getUsagePrelude() override;
