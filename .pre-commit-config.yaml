@@ -6,7 +6,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       - id: check-case-conflict
       - id: check-json
@@ -23,7 +23,7 @@ repos:
         additional_dependencies:
           - pyyaml
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v20.1.6"
+    rev: "v20.1.8"
     hooks:
       - id: clang-format
         types_or: [c++, c]
@@ -50,7 +50,7 @@ repos:
         additional_dependencies:
           - "github.com/wasilibs/go-shellcheck/cmd/shellcheck@v0.10.0"
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.11.13"
+    rev: "v0.12.8"
     hooks:
       - id: ruff-check
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -75,7 +75,7 @@ repos:
   #     - id: zizmor
   #       args: [--no-progress, --persona=pedantic]
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 40.57.1
+    rev: 41.64.4
     hooks:
       - id: renovate-config-validator
         args: [--strict]

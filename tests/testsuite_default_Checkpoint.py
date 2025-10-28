@@ -87,6 +87,9 @@ class testcase_Checkpoint(SSTTestCase):
     def test_Checkpoint_SharedObject_set(self) -> None:
         self.checkpoint_test_template("SharedObject", 2, 2, modelparams="--param=object_type:set --param=num_entities:12 --param=full_initialization:true --param=checkpoint:true", outstr = "SharedObject_set")
 
+    def test_Checkpoint_Statistics_basic(self) -> None:
+        self.checkpoint_test_template("StatisticsComponent_basic");
+
     @unittest.skipIf(testing_check_get_num_ranks() > 1, parallelerr)
     @unittest.skipIf(testing_check_get_num_threads() > 1, parallelerr)
     def test_Checkpoint_Module(self) -> None:
@@ -167,6 +170,9 @@ class testcase_Checkpoint(SSTTestCase):
             StartsWithFilter("WARNING: No components are assigned") ]
 
         cmp_result = testing_compare_filtered_diff("NeedSomethingHere", outfile_cpt, reffile, True, filters_cpt)
+        if not cmp_result:
+            diffdata = testing_get_diff_data(testtype)
+            log_failure(diffdata)
         self.assertTrue(cmp_result, "Output from original checkpoint run {0} did not match reference file {1}".format(outfile_cpt, reffile))
 
         prefix_rst = teststr + "_rst"
@@ -195,6 +201,9 @@ class testcase_Checkpoint(SSTTestCase):
             StartsWithFilter("WARNING: No components are assigned") ]
 
         cmp_result = testing_compare_filtered_diff("PortModule", outfile_rst, reffile, True, filters_rst)
+        if not cmp_result:
+            diffdata = testing_get_diff_data(testtype)
+            log_failure(diffdata)
         self.assertTrue(cmp_result, "Output/Compare file {0} does not match Reference File {1}".format(outfile_rst, reffile))
 
         ## Optionally run from restart
@@ -212,4 +221,7 @@ class testcase_Checkpoint(SSTTestCase):
             CheckpointInfoFilter() ]
 
         cmp_result = testing_compare_filtered_diff("PortModule", outfile_cr, reffile, True, filters_cr)
+        if not cmp_result:
+            diffdata = testing_get_diff_data(testtype)
+            log_failure(diffdata)
         self.assertTrue(cmp_result, "Output/Compare file {0} does not match Reference File {1}".format(outfile_cr, reffile))

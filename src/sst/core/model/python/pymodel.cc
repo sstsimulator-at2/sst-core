@@ -331,6 +331,8 @@ getProgramOptions(PyObject* UNUSED(self), PyObject* UNUSED(args))
     PyDict_SetItem(dict, SST_ConvertToPythonString("num-threads"), SST_ConvertToPythonLong(cfg->num_threads()));
     PyDict_SetItem(dict, SST_ConvertToPythonString("sdl-file"), SST_ConvertToPythonString(cfg->configFile().c_str()));
     PyDict_SetItem(dict, SST_ConvertToPythonString("print-timing-info"), SST_ConvertToPythonBool(cfg->print_timing()));
+    PyDict_SetItem(
+        dict, SST_ConvertToPythonString("timing-info-json"), SST_ConvertToPythonString(cfg->timing_json().c_str()));
     PyDict_SetItem(dict, SST_ConvertToPythonString("stop-at"), SST_ConvertToPythonString(cfg->stop_at().c_str()));
     PyDict_SetItem(dict, SST_ConvertToPythonString("exit-after"), SST_ConvertToPythonLong(cfg->exit_after()));
     PyDict_SetItem(
@@ -374,9 +376,9 @@ getProgramOptions(PyObject* UNUSED(self), PyObject* UNUSED(args))
 
     // Advanced options - profiling
     PyDict_SetItem(dict, SST_ConvertToPythonString("enable-profiling"),
-        SST_ConvertToPythonString(cfg->enabledProfiling().c_str()));
-    PyDict_SetItem(
-        dict, SST_ConvertToPythonString("profiling-output"), SST_ConvertToPythonString(cfg->profilingOutput().c_str()));
+        SST_ConvertToPythonString(cfg->enabled_profiling().c_str()));
+    PyDict_SetItem(dict, SST_ConvertToPythonString("profiling-output"),
+        SST_ConvertToPythonString(cfg->profiling_output().c_str()));
 
     // Advanced options - debug
     PyDict_SetItem(dict, SST_ConvertToPythonString("run-mode"), SST_ConvertToPythonString(cfg->runMode_str().c_str()));
@@ -1148,7 +1150,7 @@ SSTPythonModelDefinition::initModel(
 
     // Check to see if we need to import the coverage module (only works in Python >=3.9
 #if PY_MINOR_VERSION >= 9
-    if ( config->enablePythonCoverage() ) {
+    if ( config->enable_python_coverage() ) {
         enablePythonCoverage = true;
     }
     else {

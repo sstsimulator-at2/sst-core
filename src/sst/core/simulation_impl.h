@@ -17,7 +17,7 @@
 #include "sst/core/clock.h"
 #include "sst/core/componentInfo.h"
 #include "sst/core/exit.h"
-#include "sst/core/oneshot.h"
+#include "sst/core/impl/oneshotManager.h"
 #include "sst/core/output.h"
 #include "sst/core/profile/profiletool.h"
 #include "sst/core/rankInfo.h"
@@ -79,6 +79,38 @@ namespace Serialization {
 class ObjectMap;
 } // namespace Serialization
 
+
+namespace pvt {
+
+/**
+   Class to sort the contents of the TimeVortex in preparation for
+   checkpointing
+ */
+struct TimeVortexSort
+{
+    struct less
+    {
+        bool operator()(const Activity* lhs, const Activity* rhs) const;
+    };
+
+    std::vector<Activity*> data;
+
+    using iterator = std::vector<Activity*>::iterator;
+
+    // Iterator to start of actions after sort
+    iterator action_start;
+
+    TimeVortexSort() = default;
+
+    void sortData();
+
+    std::pair<iterator, iterator> getEventsForHandler(uintptr_t handler);
+
+    std::pair<iterator, iterator> getActions();
+};
+
+} // namespace pvt
+
 /**
  * Main control class for a SST Simulation.
  * Provides base features for managing the simulation
@@ -137,8 +169,8 @@ public:
 
     /******** End Public API from Simulation ********/
 
-    using clockMap_t   = std::map<std::pair<SimTime_t, int>, Clock*>;   /*!< Map of times to clocks */
-    using oneShotMap_t = std::map<std::pair<SimTime_t, int>, OneShot*>; /*!< Map of times to OneShots */
+    using clockMap_t = std::map<std::pair<SimTime_t, int>, Clock*>; /*!< Map of times to clocks */
+    // using oneShotMap_t = std::map<int, OneShot*>; /*!< Map of priorities to OneShots */
 
     ~Simulation_impl();
 
@@ -154,12 +186,12 @@ public:
     static Output& getSimulationOutput() { return sim_output; }
 
     /** Create new simulation
-     * @param config - Configuration of the simulation
      * @param my_rank - Parallel Rank of this simulation object
      * @param num_ranks - How many Ranks are in the simulation
      * @param restart - Whether this simulation is being restarted from a checkpoint (true) or not
      */
-    static Simulation_impl* createSimulation(Config* config, RankInfo my_rank, RankInfo num_ranks, bool restart);
+    static Simulation_impl* createSimulation(
+        RankInfo my_rank, RankInfo num_ranks, bool restart, SimTime_t currentSimCycle, int currentPriority);
 
     /**
      * Used to signify the end of simulation.  Cleans up any existing Simulation Objects
@@ -182,13 +214,13 @@ public:
      */
     void processGraphInfo(ConfigGraph& graph, const RankInfo& myRank, SimTime_t min_part);
 
-    int  initializeStatisticEngine(ConfigGraph& graph);
+    int  initializeStatisticEngine(StatsConfig* stats_config);
     int  prepareLinks(ConfigGraph& graph, const RankInfo& myRank, SimTime_t min_part);
     int  performWireUp(ConfigGraph& graph, const RankInfo& myRank, SimTime_t min_part);
     void exchangeLinkInfo();
 
     /** Setup external control actions (forced stops, signal handling */
-    void setupSimActions(Config* cfg, bool restart = false);
+    void setupSimActions();
 
     /** Helper for signal string parsing */
     bool parseSignalString(std::string& arg, std::string& name, Params& params);
@@ -223,9 +255,11 @@ public:
         Note: OneShot cannot be canceled, and will always callback after
               the timedelay.
     */
-    TimeConverter* registerOneShot(const std::string& timeDelay, OneShot::HandlerBase* handler, int priority);
+    // TimeConverter* registerOneShot(const std::string& timeDelay, int priority, OneShot::HandlerBase* handler, bool
+    // absolute);
 
-    TimeConverter* registerOneShot(const UnitAlgebra& timeDelay, OneShot::HandlerBase* handler, int priority);
+    // TimeConverter* registerOneShot(const UnitAlgebra& timeDelay, int priority, OneShot::HandlerBase* handler, bool
+    // absolute);
 
     const std::vector<SimTime_t>& getInterThreadLatencies() const { return interThreadLatencies; }
 
@@ -251,7 +285,6 @@ public:
     BaseComponent* getComponent(const ComponentId_t& id) const
     {
         ComponentInfo* i = compInfoMap.getByID(id);
-        // CompInfoMap_t::const_iterator i = compInfoMap.find(id);
         if ( nullptr != i ) {
             return i->getComponent();
         }
@@ -265,7 +298,6 @@ public:
     ComponentInfo* getComponentInfo(const ComponentId_t& id) const
     {
         ComponentInfo* i = compInfoMap.getByID(id);
-        // CompInfoMap_t::const_iterator i = compInfoMap.find(id);
         if ( nullptr != i ) {
             return i;
         }
@@ -301,6 +333,9 @@ public:
     /** Return the checkpoint event */
     CheckpointAction* getCheckpointAction() const { return checkpoint_action_; }
 
+
+    std::pair<pvt::TimeVortexSort::iterator, pvt::TimeVortexSort::iterator> getEventsForHandler(uintptr_t handler);
+
     /******** API provided through BaseComponent only ***********/
 
     /** Register a handler to be called on a set frequency */
@@ -313,6 +348,9 @@ public:
 
     // registerClock function used during checkpoint/restart
     void registerClock(SimTime_t factor, Clock::HandlerBase* handler, int priority);
+
+    // Reports that a clock should be present, but doesn't register anything with it
+    void reportClock(SimTime_t factor, int priority);
 
     /** Remove a clock handler from the list of active clock handlers */
     void unregisterClock(TimeConverter* tc, Clock::HandlerBase* handler, int priority);
@@ -348,7 +386,7 @@ public:
     // To enable main to set up globals
     friend int ::main(int argc, char** argv);
 
-    Simulation_impl(Config* config, RankInfo my_rank, RankInfo num_ranks, bool restart);
+    Simulation_impl(RankInfo my_rank, RankInfo num_ranks, bool restart, SimTime_t currentSimCycle, int currentPriority);
     Simulation_impl(const Simulation_impl&)            = delete; // Don't Implement
     Simulation_impl& operator=(const Simulation_impl&) = delete; // Don't implement
 
@@ -376,7 +414,15 @@ public:
      */
     void checkpoint_write_globals(
         int checkpoint_id, const std::string& registry_filename, const std::string& globals_filename);
-    void restart(Config* config);
+    void restart();
+
+    /**
+       Function used to get the rank for a link on restart.  A rank of
+       -1 on the return means that the paritioning stayed the same
+       between checkpoint and restart and the original rank info
+       stored in the checkpoint should be used.
+     */
+    RankInfo getRankForLinkOnRestart(int UNUSED(rank), uintptr_t UNUSED(tag)) { return RankInfo(); }
 
     void initialize_interactive_console(const std::string& type);
 
@@ -432,24 +478,22 @@ public:
 
     friend class SyncManager;
 
-    TimeVortex*             timeVortex;
+    TimeVortex*             timeVortex = nullptr;
     std::string             timeVortexType;  // Required for checkpoint
     TimeConverter           threadMinPartTC; // Unused...?
     Activity*               current_activity;
     static SimTime_t        minPart;
     static TimeConverter    minPartTC;
     std::vector<SimTime_t>  interThreadLatencies;
-    SimTime_t               interThreadMinLatency;
+    SimTime_t               interThreadMinLatency = MAX_SIMTIME_T;
     SyncManager*            syncManager;
-    // ThreadSync*      threadSync;
     ComponentInfoMap        compInfoMap;
     clockMap_t              clockMap;
-    oneShotMap_t            oneShotMap;
     static Exit*            m_exit;
     SimulatorHeartbeat*     m_heartbeat = nullptr;
     CheckpointAction*       checkpoint_action_;
     static std::string      checkpoint_directory_;
-    bool                    endSim;
+    bool                    endSim = false;
     bool                    independent; // true if no links leave thread (i.e. no syncs required)
     static std::atomic<int> untimed_msg_count;
     unsigned int            untimed_phase;
@@ -462,11 +506,17 @@ public:
     InteractiveConsole*     interactive_       = nullptr;
     bool                    enter_interactive_ = false;
     std::string             interactive_msg_;
+    SimTime_t               stop_at_ = 0;
+
+    // OneShotManager
+    Core::OneShotManager one_shot_manager_;
 
     /**
        vector to hold offsets of component blobs in checkpoint files
      */
     std::vector<std::pair<ComponentId_t, uint64_t>> component_blob_offsets_;
+
+    pvt::TimeVortexSort tv_sort_;
 
     /** TimeLord of the simulation */
     static TimeLord timeLord;
@@ -577,9 +627,9 @@ public:
     SimulationRunMode runMode;
 
     // Track current simulated time
-    SimTime_t currentSimCycle;
-    int       currentPriority;
-    SimTime_t endSimCycle;
+    SimTime_t currentSimCycle = 0;
+    int       currentPriority = 0;
+    SimTime_t endSimCycle     = 0;
 
     // Rank information
     RankInfo my_rank;
@@ -598,11 +648,15 @@ public:
     static std::vector<Simulation_impl*>                         instanceVec_;
 
     /******** Checkpoint/restart tracking data structures ***********/
-    std::map<uintptr_t, Link*>     link_restart_tracking;
-    std::map<uintptr_t, uintptr_t> event_handler_restart_tracking;
-    uint32_t                       checkpoint_id_       = 0;
-    std::string                    checkpoint_prefix_   = "";
-    std::string                    globalOutputFileName = "";
+    std::map<std::pair<int, uintptr_t>, Link*> link_restart_tracking;
+    std::map<uintptr_t, uintptr_t>             event_handler_restart_tracking;
+    uint32_t                                   checkpoint_id_       = 0;
+    std::string                                checkpoint_prefix_   = "";
+    std::string                                globalOutputFileName = "";
+
+    // Config object used by the simulation
+    static Config       config;
+    static StatsConfig* stats_config_;
 
     void printSimulationState();
 
