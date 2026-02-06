@@ -12,6 +12,7 @@ permissions: {}
 
 jobs:
   ubuntu2204:
+    name: Build/test core ref and elements devel
     runs-on:
       - self-hosted
       - sst-ubuntu2204

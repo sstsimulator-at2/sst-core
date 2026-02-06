@@ -12,6 +12,7 @@ permissions: {}
 
 jobs:
   rocky8-nompi:
+    name: Build/test core ref and elements devel
     runs-on: ubuntu-24.04
     container:
       image: rockylinux/rockylinux:8.10.20240528@sha256:6d2ede107b4f005a638728711dae05d5fbbfd8abd521cecf5ab61196b361c965

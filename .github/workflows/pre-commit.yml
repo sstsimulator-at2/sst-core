@@ -13,6 +13,7 @@ permissions: {}
 
 jobs:
   pre-commit:
+    name: Run pre-commit on current ref
     runs-on: ubuntu-24.04
     steps:
       # Get this user's SST-core repo/branch
