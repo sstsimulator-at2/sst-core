@@ -41,6 +41,11 @@ jobs:
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       ./.github/workflows/free-macos-15.yml
+  macos-26:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      ./.github/workflows/free-macos-26.yml
   rocky8:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
