@@ -10,7 +10,7 @@ on:
       - synchronize
 
 concurrency:
-  group: ci-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  group: ${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 permissions: {}
@@ -18,10 +18,9 @@ permissions: {}
 jobs:
   prechecks:
     uses: ./.github/workflows/pre-commit.yml
-    # for label manipulation
     permissions:
-      issues: write
-      pull-requests: write
+      issues: write # for label manipulation
+      pull-requests: write # for label manipulation
   all-prechecks:
     needs: [prechecks]
     runs-on: ubuntu-24.04
@@ -32,7 +31,7 @@ jobs:
     needs: [all-prechecks]
     uses: ./.github/workflows/build_and_test.yml
     permissions:
-      actions: write
+      actions: write # needed by skip-duplicate-actions
   # at2-tests:
   #   needs: [all-prechecks]
   #   uses: ./.github/workflows/build_and_test_at2.yml

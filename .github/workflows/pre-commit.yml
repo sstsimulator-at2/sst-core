@@ -6,7 +6,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: style-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  group: ${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 permissions: {}

@@ -6,7 +6,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: build-and-test-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  group: ${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 permissions: {}
@@ -16,9 +16,8 @@ jobs:
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
     runs-on: ubuntu-24.04
-    # actions: write needed by skip-duplicate-actions
     permissions:
-      actions: write
+      actions: write # needed by skip-duplicate-actions
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:

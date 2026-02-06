@@ -4,13 +4,17 @@ name: Build/test on Rocky Linux 8
 on:
   workflow_call:
 
+concurrency:
+  group: ${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
 permissions: {}
 
 jobs:
   rocky8:
     runs-on: ubuntu-24.04
     container:
-      image: rockylinux/rockylinux:8.10.20240528
+      image: rockylinux/rockylinux:8.10.20240528@sha256:6d2ede107b4f005a638728711dae05d5fbbfd8abd521cecf5ab61196b361c965
     steps:
 
       - name: Install git

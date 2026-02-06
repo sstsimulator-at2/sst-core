@@ -9,7 +9,7 @@ permissions: {}
 
 # Cancels any in progress 'workflow' associated with this PR
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 jobs:
@@ -17,9 +17,8 @@ jobs:
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
     runs-on: ubuntu-24.04
-    # actions: write needed by skip-duplicate-actions
     permissions:
-      actions: write
+      actions: write # needed by skip-duplicate-actions
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
