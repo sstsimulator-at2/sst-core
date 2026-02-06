@@ -41,9 +41,9 @@ template <bool TS>
 bool
 TimeVortexPQBase<TS>::empty()
 {
-    if ( TS ) slock.lock();
+    if constexpr ( TS ) slock.lock();
     auto ret = data.empty();
-    if ( TS ) slock.unlock();
+    if constexpr ( TS ) slock.unlock();
     return ret;
 }
 
@@ -51,9 +51,9 @@ template <bool TS>
 int
 TimeVortexPQBase<TS>::size()
 {
-    if ( TS ) slock.lock();
+    if constexpr ( TS ) slock.lock();
     auto ret = data.size();
-    if ( TS ) slock.unlock();
+    if constexpr ( TS ) slock.unlock();
     return ret;
 }
 
@@ -61,26 +61,26 @@ template <bool TS>
 void
 TimeVortexPQBase<TS>::insert(Activity* activity)
 {
-    if ( TS ) slock.lock();
+    if constexpr ( TS ) slock.lock();
     activity->setQueueOrder(insertOrder++);
     data.push(activity);
     current_depth++;
     if ( current_depth > max_depth ) {
         max_depth = current_depth;
     }
-    if ( TS ) slock.unlock();
+    if constexpr ( TS ) slock.unlock();
 }
 
 template <bool TS>
 Activity*
 TimeVortexPQBase<TS>::pop()
 {
-    if ( TS ) slock.lock();
+    if constexpr ( TS ) slock.lock();
     if ( data.empty() ) return nullptr;
     Activity* ret_val = data.top();
     data.pop();
     current_depth--;
-    if ( TS ) slock.unlock();
+    if constexpr ( TS ) slock.unlock();
     return ret_val;
 }
 
@@ -88,9 +88,9 @@ template <bool TS>
 Activity*
 TimeVortexPQBase<TS>::front()
 {
-    if ( TS ) slock.lock();
+    if constexpr ( TS ) slock.lock();
     auto ret = data.top();
-    if ( TS ) slock.unlock();
+    if constexpr ( TS ) slock.unlock();
     return ret;
 }
 
@@ -129,8 +129,8 @@ public:
     explicit TimeVortexPQ(Params& params) :
         TimeVortexPQBase<false>(params)
     {}
-    TimeVortexPQ() = delete;
-    ~TimeVortexPQ() {}
+    TimeVortexPQ()  = delete;
+    ~TimeVortexPQ() = default;
 
     SST_ELI_EXPORT(TimeVortexPQ)
 };
@@ -151,8 +151,8 @@ public:
     explicit TimeVortexPQ_ts(Params& params) :
         TimeVortexPQBase<true>(params)
     {}
-    TimeVortexPQ_ts() = delete;
-    ~TimeVortexPQ_ts() {}
+    TimeVortexPQ_ts()  = delete;
+    ~TimeVortexPQ_ts() = default;
 
     SST_ELI_EXPORT(TimeVortexPQ_ts)
 };

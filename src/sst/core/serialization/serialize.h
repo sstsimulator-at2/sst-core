@@ -85,9 +85,27 @@ struct SerOption
 
 namespace Core::Serialization {
 
-template <typename T>
-void sst_ser_object(serializer& ser, T&& obj, ser_opt_t options = SerOption::none, const char* name = nullptr);
+namespace pvt {
 
+template <typename T>
+void sst_ser_object(serializer& ser, T&& obj, ser_opt_t options, const char* name);
+
+// Proxy struct which represents a bit reference wrapper similar to std::reference_wrapper.
+// This proxy is needed in order for us to partially specialize serialize_impl for the
+// std::bitset<N>::reference and std::vector<bool>::reference types in mapping mode.
+template <typename T>
+struct bit_reference_wrapper
+{
+    typename T::reference ref;
+    explicit bit_reference_wrapper(typename T::reference ref) :
+        ref(ref)
+    {}
+    bit_reference_wrapper(const bit_reference_wrapper&)            = default;
+    bit_reference_wrapper& operator=(const bit_reference_wrapper&) = delete;
+    ~bit_reference_wrapper()                                       = default;
+};
+
+} // namespace pvt
 
 // get_ptr() returns reference to argument if it's a pointer, else address of argument
 template <typename T>
@@ -99,7 +117,6 @@ get_ptr(T& t)
     else
         return &t;
 }
-
 
 /**
    Base serialize class.
@@ -164,7 +181,7 @@ template <class T>
 class serialize
 {
     template <class U>
-    friend void SST::Core::Serialization::sst_ser_object(serializer& ser, U&& obj, ser_opt_t options, const char* name);
+    friend void sst_ser_object(serializer& ser, U&& obj, ser_opt_t options, const char* name);
 
     void operator()(T& t, serializer& ser, ser_opt_t options) { return serialize_impl<T>()(t, ser, options); }
 
@@ -232,7 +249,7 @@ template <class T>
 class serialize<T*>
 {
     template <class U>
-    friend void SST::Core::Serialization::sst_ser_object(serializer& ser, U&& obj, ser_opt_t options, const char* name);
+    friend void sst_ser_object(serializer& ser, U&& obj, ser_opt_t options, const char* name);
     void        operator()(T*& t, serializer& ser, ser_opt_t options)
     {
         // We are a pointer, need to see if tracking is turned on
@@ -325,8 +342,6 @@ class serialize<T*>
     }
 };
 
-} // namespace pvt
-
 // All serialization must go through this function to ensure
 // everything works correctly
 //
@@ -344,20 +359,17 @@ sst_ser_object(serializer& ser, TREF&& obj, ser_opt_t options, const char* name)
     // seeing if pointer tracking is turned off, because it is turned on for both checkpointing and mapping mode.
     if ( !ser.is_pointer_tracking_enabled() ) {
         // Options are wiped out since none apply in this case
-        return pvt::serialize<T>()(obj, ser, SerOption::none);
+        pvt::serialize<T>()(obj, ser, SerOption::none);
     }
-
-    // Mapping mode
-    if ( ser.mode() == serializer::MAP ) {
-        ObjectMapContext context(ser, name);
+    else if ( ser.mode() == serializer::MAP ) {
+        // Mapping mode
         // Check to see if we are NOMAP
-        if ( SerOption::is_set(options, SerOption::no_map) ) return;
-
-        pvt::serialize<T>()(obj, ser, options);
-        return;
+        if ( !SerOption::is_set(options, SerOption::no_map) ) {
+            ObjectMapContext context(ser, name);
+            pvt::serialize<T>()(obj, ser, options);
+        }
     }
-
-    if constexpr ( !std::is_pointer_v<T> ) {
+    else if constexpr ( !std::is_pointer_v<T> ) {
         // as_ptr is only valid for non-pointers
         if ( SerOption::is_set(options, SerOption::as_ptr) ) {
             pvt::serialize<T>().serialize_and_track_pointer(obj, ser, options);
@@ -372,6 +384,8 @@ sst_ser_object(serializer& ser, TREF&& obj, ser_opt_t options, const char* name)
     }
 }
 
+} // namespace pvt
+
 // A universal/forwarding reference is used for obj so that it can match rvalue wrappers like
 // SST::Core::Serialization::array(ary, size) but then it is used as an lvalue so that it
 // matches serialization functions which only take lvalue references.
@@ -382,7 +396,7 @@ template <class T>
 void
 operator&(serializer& ser, T&& obj)
 {
-    SST::Core::Serialization::sst_ser_object(ser, obj, SerOption::no_map);
+    pvt::sst_ser_object(ser, obj, SerOption::no_map, "");
 }
 
 template <class T>
@@ -392,21 +406,18 @@ template <class T>
 void
 operator|(serializer& ser, T&& obj)
 {
-    SST::Core::Serialization::sst_ser_object(ser, obj, SerOption::no_map | SerOption::as_ptr);
+    pvt::sst_ser_object(ser, obj, SerOption::no_map | SerOption::as_ptr, "");
 }
 
 
 // Serialization macros for checkpoint/debug serialization
-#define SST_SER(obj, ...)                     \
-    SST::Core::Serialization::sst_ser_object( \
+#define SST_SER(obj, ...)                          \
+    SST::Core::Serialization::pvt::sst_ser_object( \
         ser, (obj), SST::Core::Serialization::pvt::sst_ser_or_helper(__VA_ARGS__), #obj)
 
-#define SST_SER_NAME(obj, name, ...)          \
-    SST::Core::Serialization::sst_ser_object( \
+#define SST_SER_NAME(obj, name, ...)               \
+    SST::Core::Serialization::pvt::sst_ser_object( \
         ser, (obj), SST::Core::Serialization::pvt::sst_ser_or_helper(__VA_ARGS__), name)
-
-
-// #define SST_SER_AS_PTR(obj) (ser | (obj));
 
 namespace pvt {
 template <typename... Args>
@@ -417,6 +428,22 @@ sst_ser_or_helper(Args... args)
 }
 
 } // namespace pvt
+
+// Serialize an object and return an ObjectMap which represents it
+template <typename T>
+ObjectMap*
+ObjectMapSerialization(T&& obj)
+{
+    ObjectMapClass root;
+    serializer     ser;
+    ser.enable_pointer_tracking();
+    ser.start_mapping(&root);
+    SST_SER_NAME(obj, "_proxy_object_");
+    ObjectMap* ret = root.findVariable("_proxy_object_");
+    if ( ret ) ret->incRefCount();
+    return ret;
+}
+
 } // namespace Core::Serialization
 } // namespace SST
 
