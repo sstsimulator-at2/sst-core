@@ -9,7 +9,7 @@ permissions: {}
 
 # Cancels any in progress 'workflow' associated with this PR
 concurrency:
-  group: ${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  group: build_and_test_at2-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 jobs:
