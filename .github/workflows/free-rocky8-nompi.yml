@@ -20,8 +20,8 @@ jobs:
 
       - name: Install git
         run: |
-          yum -y upgrade
-          yum -y install git
+          dnf -y upgrade
+          dnf -y install git
 
       - name: Clone core
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -41,7 +41,14 @@ jobs:
         run: |
           sst-core/.github/scripts/install_os_level_dependencies.sh
 
-      - name: Install and configure ccache
+      - name: Install ccache
+        run: |
+          dnf -y install 'dnf-command(config-manager)'
+          dnf -y config-manager --set-enabled powertools
+          dnf -y install epel-release
+          dnf -y install ccache
+
+      - name: Configure ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2.18
         with:
           append-timestamp: false
