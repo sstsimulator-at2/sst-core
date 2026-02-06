@@ -4,6 +4,10 @@ name: Build/test on macOS 14
 on:
   workflow_call:
 
+concurrency:
+  group: free-macos-14-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
 permissions: {}
 
 jobs:
@@ -12,13 +16,13 @@ jobs:
     steps:
 
       - name: Clone core
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           path: sst-core
           persist-credentials: false
 
       - name: Clone elements
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           path: sst-elements
           persist-credentials: false
@@ -30,7 +34,7 @@ jobs:
           sst-core/.github/scripts/install_os_level_dependencies.sh
 
       - name: Install and configure ccache
-        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
+        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2.18
         with:
           append-timestamp: false
           create-symlink: true

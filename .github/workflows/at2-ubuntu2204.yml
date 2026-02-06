@@ -4,6 +4,10 @@ name: ubuntu2204
 on:
   workflow_call:
 
+concurrency:
+  group: at2-ubuntu2204-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
 permissions: {}
 
 jobs:
@@ -31,7 +35,7 @@ jobs:
       # they are all already in the image.
 
       - name: Install and configure ccache
-        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2
+        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2.18
         with:
           append-timestamp: false
           create-symlink: false
