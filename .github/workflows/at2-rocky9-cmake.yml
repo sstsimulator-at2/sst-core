@@ -12,6 +12,7 @@ permissions: {}
 
 jobs:
   rocky9-cmake:
+    name: Build/test core ref and elements devel
     runs-on:
       - self-hosted
       - sst-rocky9

@@ -12,6 +12,7 @@ permissions: {}
 
 jobs:
   macos-15:
+    name: Build/test core ref and elements devel
     runs-on: macos-15
     steps:
 

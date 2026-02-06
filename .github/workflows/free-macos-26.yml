@@ -1,51 +1,40 @@
 ---
-name: Build/test on Arch Linux
+name: Build/test on macOS 26
 
 on:
   workflow_call:
 
 concurrency:
-  group: free-arch-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  group: free-macos-26-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 permissions: {}
 
 jobs:
-  arch:
+  macos-26:
     name: Build/test core ref and elements devel
-    runs-on: ubuntu-24.04
-    container:
-      image: archlinux:base-20250615.0.365905@sha256:1a39198fcde68348c49a3fd78a54ced553af8168252c6222451f3fe943a4f7ec
+    runs-on: macos-26
     steps:
 
-      - name: Install git
-        run: |
-          pacman -Sy --noconfirm
-          pacman -S --noconfirm git
-
       - name: Clone core
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           path: sst-core
           persist-credentials: false
 
       - name: Clone elements
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           path: sst-elements
           persist-credentials: false
           ref: devel
-          repository: sstsimulator-at2/sst-elements
+          repository: sstsimulator/sst-elements
 
       - name: Install system-level dependencies
         run: |
           sst-core/.github/scripts/install_os_level_dependencies.sh
 
-      - name: Install ccache
-        run: |
-          pacman -S --noconfirm ccache
-
-      - name: Configure ccache
+      - name: Install and configure ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2.18
         with:
           append-timestamp: false
@@ -61,6 +50,11 @@ jobs:
           echo "MAKEFLAGS=${MAKEFLAGS}" >> "${GITHUB_ENV}"
           echo "TERM=dumb" >> "${GITHUB_ENV}"
 
+      - name: Pin Python version
+        uses: actions/setup-python@v6.2.0  # v6.0.0
+        with:
+          python-version: '3.13'
+
       - name: Compile core
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
@@ -70,10 +64,10 @@ jobs:
         run: |
           install_autotools_noflags_nodeps_gcc/bin/sst-test-core
 
-      - name: Save sst_test_outputs
-        uses: actions/upload-artifact@v4
+      - name: Save sst_test_outputs after core tests
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: sst_test_outputs_core_free-arch
+          name: sst_test_outputs_core_free-macos-26
           path: sst_test_outputs
           compression-level: 9
           if-no-files-found: error
@@ -89,10 +83,10 @@ jobs:
         run: |
           install_autotools_noflags_nodeps_gcc/bin/sst-test-elements
 
-      - name: Save sst_test_outputs
-        uses: actions/upload-artifact@v4
+      - name: Save sst_test_outputs after elements tests
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: sst_test_outputs_elements_free-arch
+          name: sst_test_outputs_elements_free-macos-26
           path: sst_test_outputs
           compression-level: 9
           if-no-files-found: error

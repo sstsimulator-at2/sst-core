@@ -12,6 +12,7 @@ permissions: {}
 
 jobs:
   rocky8-nompi:
+    name: Build/test core ref and elements devel
     runs-on:
       - self-hosted
       - sst-rocky8

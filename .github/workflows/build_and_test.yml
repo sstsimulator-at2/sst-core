@@ -15,6 +15,7 @@ jobs:
   # Jobs depend on the output of pre-checks to run.
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
+    name: Determine if build/test should be performed
     runs-on: ubuntu-24.04
     permissions:
       actions: write # needed by skip-duplicate-actions
@@ -25,11 +26,11 @@ jobs:
         uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5.3.1
         with:
           skip_after_successful_duplicate: 'true'
-  # arch:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
-  #   uses:
-  #     ./.github/workflows/free-arch.yml
+  arch:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      ./.github/workflows/free-arch.yml
   macos-14:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
@@ -40,6 +41,11 @@ jobs:
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       ./.github/workflows/free-macos-15.yml
+  macos-26:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      ./.github/workflows/free-macos-26.yml
   rocky8:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}

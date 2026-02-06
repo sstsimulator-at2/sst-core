@@ -23,6 +23,7 @@ jobs:
       pull-requests: write # for label manipulation
   all-prechecks:
     needs: [prechecks]
+    name: CI precheck success
     runs-on: ubuntu-24.04
     steps:
       - name: Success
@@ -44,6 +45,7 @@ jobs:
   all-tests:
     # needs: [tests, at2-tests]
     needs: [tests]
+    name: CI success
     runs-on: ubuntu-24.04
     steps:
       - name: Success
