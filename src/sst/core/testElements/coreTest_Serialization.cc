@@ -369,7 +369,12 @@ checkFixedArraySerializeDeserialize(T& data)
             if ( data[i] != result[i] ) return false;
         }
     }
-    if constexpr ( std::is_pointer_v<T> ) delete[] result;
+    if constexpr ( std::is_pointer_v<T> ) {
+        if constexpr ( std::is_array_v<std::remove_pointer_t<T>> )
+            delete[] result;
+        else
+            delete result;
+    }
     return true;
 };
 
@@ -555,7 +560,7 @@ public:
     explicit pointed_to_class(int val) :
         value(val)
     {}
-    pointed_to_class() {}
+    pointed_to_class() = default;
 
     int  getValue() { return value; }
     void setValue(int val) { value = val; }
@@ -575,7 +580,7 @@ public:
         value(val),
         pointed_to(ptc)
     {}
-    shell() {}
+    shell() = default;
 
     int  getValue() { return value; }
     void setValue(int val) { value = val; }
@@ -653,7 +658,7 @@ struct HandlerTest : public SST::Core::Serialization::serializable
     explicit HandlerTest(int in) :
         value(in)
     {}
-    HandlerTest() {}
+    HandlerTest() = default;
 
     void serialize_order(SST::Core::Serialization::serializer& ser) override { SST_SER(value); }
     ImplementSerializable(HandlerTest)
@@ -676,7 +681,7 @@ struct RecursiveSerializationTest : public SST::Core::Serialization::serializabl
     Handler<RecursiveSerializationTest, &RecursiveSerializationTest::call, float>* handler;
     int                                                                            value;
 
-    RecursiveSerializationTest() {}
+    RecursiveSerializationTest() = default;
     explicit RecursiveSerializationTest(int in) :
         value(in)
     {
@@ -825,28 +830,33 @@ testSharedPtr(Output& output, const std::unique_ptr<SST::RNG::Random>& rng)
             }
         }
 
-        // a duplicated std::shared_ptr with a std::weak_ptr
+#if !SST_SERIALIZE_WEAK_PTR_ARRAY
+        if constexpr ( !std::is_array_v<T> )
+#endif
         {
-            std::shared_ptr<T> in1 = std::make_shared<T>(rand()), in2 = in1;
-            std::weak_ptr<T>   in3  = in2;
-            std::shared_ptr<T> out1 = std::make_shared<T>(rand()), out2 = std::make_shared<T>(rand());
-            std::weak_ptr<T>   out3;
+            // a duplicated std::shared_ptr with a std::weak_ptr
+            {
+                std::shared_ptr<T> in1 = std::make_shared<T>(rand()), in2 = in1;
+                std::weak_ptr<T>   in3  = in2;
+                std::shared_ptr<T> out1 = std::make_shared<T>(rand()), out2 = std::make_shared<T>(rand());
+                std::weak_ptr<T>   out3;
 
-            serializeDeserialize(std::tie(in1, in2, in3), std::tie(out1, out2, out3));
-            if ( !checkSameOwner(out1, out2) || !checkSameOwner(out2, out3) ||
-                 !checkSharedPtr(std::tie(in1, in2, in3), std::tie(out1, out2, out3)) ) {
-                output.output("ERROR: shared_ptr did not serialize/deserialize properly (test 3)\n");
+                serializeDeserialize(std::tie(in1, in2, in3), std::tie(out1, out2, out3));
+                if ( !checkSameOwner(out1, out2) || !checkSameOwner(out2, out3) ||
+                     !checkSharedPtr(std::tie(in1, in2, in3), std::tie(out1, out2, out3)) ) {
+                    output.output("ERROR: shared_ptr did not serialize/deserialize properly (test 3)\n");
+                }
             }
-        }
 
-        // an expired std::weak_ptr
-        {
-            std::weak_ptr<T> in = std::make_shared<T>(rand());
-            std::weak_ptr<T> out;
+            // an expired std::weak_ptr
+            {
+                std::weak_ptr<T> in = std::make_shared<T>(rand());
+                std::weak_ptr<T> out;
 
-            serializeDeserialize(std::tie(in), std::tie(out));
-            if ( !checkSharedPtr(in, out) ) {
-                output.output("ERROR: shared_ptr did not serialize/deserialize properly (test 4)\n");
+                serializeDeserialize(std::tie(in), std::tie(out));
+                if ( !checkSharedPtr(in, out) ) {
+                    output.output("ERROR: shared_ptr did not serialize/deserialize properly (test 4)\n");
+                }
             }
         }
 
