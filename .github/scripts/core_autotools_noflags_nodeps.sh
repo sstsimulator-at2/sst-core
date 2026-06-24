@@ -36,6 +36,7 @@ mkdir -p "${dir_build}"
 pushd "${dir_build}"
 
 INSTALL="$(command -v install) -p" "${dir_src}"/configure \
+       --disable-dependency-tracking \
        --prefix="${dir_install}"
 
 bear_make_install
