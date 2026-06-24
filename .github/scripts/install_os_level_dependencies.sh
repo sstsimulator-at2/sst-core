@@ -23,6 +23,11 @@ elif command -v dnf; then
         gcc-c++ \
         libtool \
         openmpi
+    if [[ -f "${GITHUB_PATH}" ]]; then
+        if [[ -d "/usr/lib64/openmpi/bin" ]]; then
+            echo "/usr/lib64/openmpi/bin" >> "${GITHUB_PATH}"
+        fi
+    fi
 elif command -v apt-get; then
     apt-get -y update
     apt-get -y install \
