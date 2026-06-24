@@ -15,7 +15,7 @@ jobs:
     name: Build/test core ref and elements devel
     runs-on: ubuntu-24.04
     container:
-      image: archlinux:base-20250615.0.365905@sha256:1a39198fcde68348c49a3fd78a54ced553af8168252c6222451f3fe943a4f7ec
+      image: archlinux:base-20260621.0.546891@sha256:d9abf957599bddf27955a0dd82b4457dcfaace50525bb773f6c7518f8015e7e4
     steps:
 
       - name: Install git
