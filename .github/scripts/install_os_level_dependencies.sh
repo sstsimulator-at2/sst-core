@@ -22,6 +22,7 @@ elif command -v dnf; then
     dnf -y install \
         gcc-c++ \
         libtool \
+        libtool-ltdl-devel \
         make \
         ncurses-devel \
         openmpi \
