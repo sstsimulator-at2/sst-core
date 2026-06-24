@@ -17,6 +17,12 @@ if command -v brew; then
          open-mpi \
          pygments
     python -m pip install blessings
+elif command -v dnf; then
+    dnf -y upgrade
+    dnf -y install \
+        gcc-c++ \
+        libtool \
+        openmpi
 elif command -v apt-get; then
     apt-get -y update
     apt-get -y install \
