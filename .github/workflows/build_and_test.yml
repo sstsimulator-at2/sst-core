@@ -31,11 +31,6 @@ jobs:
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       ./.github/workflows/free-arch.yml
-  macos-14:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
-    uses:
-      ./.github/workflows/free-macos-14.yml
   macos-15:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
