@@ -22,6 +22,8 @@ elif command -v dnf; then
     dnf -y install \
         gcc-c++ \
         libtool \
+        make \
+        ncurses-devel \
         openmpi \
         python39-devel
     if [[ -f "${GITHUB_PATH}" ]]; then
