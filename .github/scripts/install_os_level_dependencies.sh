@@ -22,7 +22,8 @@ elif command -v dnf; then
     dnf -y install \
         gcc-c++ \
         libtool \
-        openmpi
+        openmpi \
+        python39-devel
     if [[ -f "${GITHUB_PATH}" ]]; then
         if [[ -d "/usr/lib64/openmpi/bin" ]]; then
             echo "/usr/lib64/openmpi/bin" >> "${GITHUB_PATH}"
