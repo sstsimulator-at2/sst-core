@@ -1,10 +1,10 @@
 // -*- c++ -*-
 
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -37,21 +37,26 @@ extern "C" {
 StatisticId_t
 PyStatistic::getID()
 {
-    return id;
+    return stat_id;
 }
 
 ConfigStatistic*
 PyStatistic::getStat()
 {
-    return gModel->getGraph()->findStatistic(id);
+    // ComponentId_t cid = CONFIG_COMPONENT_ID_MASK(stat_id);
+    return gModel->getGraph()->findStatistic(comp_id, stat_id);
 }
 
 int
 PyStatistic::compare(PyStatistic* other)
 {
-    if ( id < other->id )
+    if ( comp_id < other->comp_id )
         return -1;
-    else if ( id > other->id )
+    else if ( comp_id > other->comp_id )
+        return 1;
+    else if ( stat_id < other->stat_id )
+        return -1;
+    else if ( stat_id > other->stat_id )
         return 1;
     else
         return 0;
@@ -60,14 +65,12 @@ PyStatistic::compare(PyStatistic* other)
 static int
 statInit(StatisticPy_t* self, PyObject* args, PyObject* UNUSED(kwds))
 {
-    StatisticId_t id = 0;
-    if ( !PyArg_ParseTuple(args, "k", &id) ) return -1;
+    ComponentId_t sid = 0;
+    StatisticId_t cid = 0;
+    if ( !PyArg_ParseTuple(args, "kk", &cid, &sid) ) return -1;
 
-    PyStatistic* obj = new PyStatistic(id);
+    PyStatistic* obj = new PyStatistic(cid, sid);
     self->obj        = obj;
-
-    // gModel->getOutput()->verbose(CALL_INFO, 3, 0, "Creating statistic [%s]]\n",
-    // getStat((PyObject*)self)->name.c_str());
 
     return 0;
 }
@@ -124,7 +127,6 @@ statAddParams(PyObject* self, PyObject* args)
     return SST_ConvertToPythonLong(count);
 }
 
-#if PY_MAJOR_VERSION >= 3
 static PyObject*
 statCompare(PyObject* obj0, PyObject* obj1, int op)
 {
@@ -154,22 +156,10 @@ statCompare(PyObject* obj0, PyObject* obj1, int op)
     Py_INCREF(result);
     return result;
 }
-#else
-static int
-statCompare(PyObject* obj0, PyObject* obj1)
-{
-    return ((PyStatistic*)obj0)->compare(((PyStatistic*)obj1));
-}
-#endif
 
 static PyMethodDef statisticMethods[] = { { "addParam", statAddParam, METH_VARARGS, "Adds a parameter(name, value)" },
     { "addParams", statAddParams, METH_O, "Adds Multiple Parameters from a dict" }, { nullptr, nullptr, 0, nullptr } };
 
-#if PY_MAJOR_VERSION == 3
-#if PY_MINOR_VERSION == 8
-DISABLE_WARN_DEPRECATED_DECLARATION
-#endif
-#endif
 PyTypeObject PyModel_StatType = {
     SST_PY_OBJ_HEAD "sst.Statistic", /* tp_name */
     sizeof(StatisticPy_t),           /* tp_basicsize */
@@ -219,15 +209,9 @@ PyTypeObject PyModel_StatType = {
     0,                               /* tp_version_tag */
     nullptr,                         /* tp_finalize */
     SST_TP_VECTORCALL                /* Python3.8+ */
-    SST_TP_PRINT_DEP                 /* Python3.8 only */
     SST_TP_WATCHED                   /* Python3.12+ */
     SST_TP_VERSIONS_USED             /* Python3.13+ only */
 };
-#if PY_MAJOR_VERSION == 3
-#if PY_MINOR_VERSION == 8
-REENABLE_WARNING
-#endif
-#endif
 
 } /* extern C */
 

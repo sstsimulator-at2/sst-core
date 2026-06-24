@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -24,7 +24,7 @@
 
 namespace SST {
 
-class Simulation_impl;
+class Simulation;
 
 namespace Core {
 
@@ -41,8 +41,8 @@ public:
 
     /**
        Base handler for OneShot callbacks.
-     */
-    using HandlerBase = SSTHandlerBaseNoArgs<void>;
+    */
+    using HandlerBase = SSTHandlerBase<void, void>;
 
     /**
        Used to create checkpointable handlers for OneShot.  The callback function is
@@ -52,7 +52,7 @@ public:
 
        In which case, the class is created with:
 
-         new OneShot::Handler2<classname, &classname::function_name>(this)
+         new OneShot::Handler<classname, &classname::function_name>(this)
 
        Or, to add static data, the callback function is:
 
@@ -60,10 +60,15 @@ public:
 
        and the class is created with:
 
-         new OneShot::Handler2<classname, &classname::function_name, dataT>(this, data)
+         new OneShot::Handler<classname, &classname::function_name, dataT>(this, data)
      */
     template <typename classT, auto funcT, typename dataT = void>
-    using Handler2 = SSTHandler2<void, void, classT, dataT, funcT>;
+    using Handler = SSTHandler<void, void, classT, dataT, funcT>;
+
+    template <typename classT, auto funcT, typename dataT = void>
+    using Handler2 [[deprecated(
+        "The name Handler2 has been deprecated and will be removed in SST 17. Please rename Handler2 to Handler.")]]
+    = SSTHandler<void, void, classT, dataT, funcT>;
 
     using HandlerList_t = std::vector<OneShot::HandlerBase*>;
 
@@ -105,14 +110,14 @@ public:
         Note: OneShot cannot be canceled, and will always callback after
               the timedelay.
     */
-    OneShotManager(Simulation_impl* sim);
+    OneShotManager(Simulation* sim);
     ~OneShotManager();
 
     /** Add a handler to be called on this OneShot Event */
     template <class classT, auto funcT, typename dataT>
     void registerRelativeHandler(SimTime_t trigger_time, int priority, classT* obj, dataT metadata)
     {
-        OneShot::HandlerBase* handler = new OneShot::Handler2<classT, funcT, dataT>(obj, metadata);
+        OneShot::HandlerBase* handler = new OneShot::Handler<classT, funcT, dataT>(obj, metadata);
         registerHandlerBase(trigger_time, priority, true, handler);
     }
 
@@ -120,7 +125,7 @@ public:
     template <class classT, auto funcT>
     void registerRelativeHandler(SimTime_t trigger_time, int priority, classT* obj)
     {
-        OneShot::HandlerBase* handler = new OneShot::Handler2<classT, funcT>(obj);
+        OneShot::HandlerBase* handler = new OneShot::Handler<classT, funcT>(obj);
         registerHandlerBase(trigger_time, priority, true, handler);
     }
 
@@ -128,7 +133,7 @@ public:
     template <class classT, auto funcT, typename dataT>
     void registerAbsoluteHandler(SimTime_t trigger_time, int priority, classT* obj, dataT metadata)
     {
-        OneShot::HandlerBase* handler = new OneShot::Handler2<classT, funcT, dataT>(obj, metadata);
+        OneShot::HandlerBase* handler = new OneShot::Handler<classT, funcT, dataT>(obj, metadata);
         registerHandlerBase(trigger_time, priority, false, handler);
     }
 
@@ -136,7 +141,7 @@ public:
     template <class classT, auto funcT>
     void registerAbsoluteHandler(SimTime_t trigger_time, int priority, classT* obj)
     {
-        OneShot::HandlerBase* handler = new OneShot::Handler2<classT, funcT>(obj);
+        OneShot::HandlerBase* handler = new OneShot::Handler<classT, funcT>(obj);
         registerHandlerBase(trigger_time, priority, false, handler);
     }
 
@@ -145,7 +150,7 @@ private:
     friend class OneShot;
 
     HandlerVectorMap_t handler_vector_map_;
-    Simulation_impl*   sim_ = nullptr;
+    Simulation*        sim_ = nullptr;
 
     /**
        Registers a handler for delivery at the specified time

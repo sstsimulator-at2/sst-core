@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -55,7 +55,7 @@ public:
 
        In which case, the class is created with:
 
-         new Event::Handler<classname>(this, &classname::function_name)
+         new Event::Handler<classname, &classname::function_name>(this)
 
        Or, to add static data, the callback function is:
 
@@ -63,19 +63,19 @@ public:
 
        and the class is created with:
 
-         new Event::Handler<classname, dataT>(this, &classname::function_name, data)
+         new Event::Handler<classname, &classname::function_name, dataT>(this, data)
      */
-    template <typename classT, typename dataT = void>
-    using Handler
-        [[deprecated("Handler has been deprecated. Please use Handler2 instead as it supports checkpointing.")]] =
-            SSTHandler<void, Event*, classT, dataT>;
+    template <typename classT, auto funcT, typename dataT = void>
+    using Handler = SSTHandler<void, Event*, classT, dataT, funcT>;
 
 
     /**
-       New style (checkpointable) SSTHandler
+       Handler2 version which is now the same as Handler and is provided for backward compatibility until SST 17
     */
     template <typename classT, auto funcT, typename dataT = void>
-    using Handler2 = SSTHandler2<void, Event*, classT, dataT, funcT>;
+    using Handler2 [[deprecated(
+        "The name Handler2 has been deprecated and will be removed in SST 17. Please rename Handler2 to Handler.")]]
+    = SSTHandler<void, Event*, classT, dataT, funcT>;
 
     /**
        Class used to sort events during checkpointing.  This is used
@@ -191,7 +191,7 @@ private:
     friend class RankSync;
     friend class ThreadSync;
     friend class TimeVortex;
-    friend class Simulation_impl;
+    friend class Simulation;
 
 
     /** Cause this event to fire */
@@ -287,6 +287,40 @@ public:
 
     ~EventHandlerMetaData() {}
 };
+
+/**
+   Basic Event that can hold on data item.
+*/
+template <class dataT>
+class BasicEvent : public SST::Event
+{
+public:
+    BasicEvent()  = default; // For serialization only
+    ~BasicEvent() = default;
+
+    /** Create a new BasicEvent
+        @param data Contents of this event
+     */
+    explicit BasicEvent(const dataT& data) :
+        SST::Event(),
+        data(data)
+    {}
+
+    /** Clone a BasicEvent */
+    Event* clone() override { return new BasicEvent(*this); }
+
+
+    dataT data;
+
+    void serialize_order(SST::Core::Serialization::serializer& ser) override
+    {
+        Event::serialize_order(ser);
+        SST_SER(data);
+    }
+
+    ImplementSerializable(BasicEvent);
+};
+
 
 namespace pvt {
 

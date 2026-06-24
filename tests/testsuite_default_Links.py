@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2009-2025 NTESS. Under the terms
+# Copyright 2009-2026 NTESS. Under the terms
 # of Contract DE-NA0003525 with NTESS, the U.S.
 # Government retains certain rights in this software.
 #
-# Copyright (c) 2009-2025, NTESS
+# Copyright (c) 2009-2026, NTESS
 # All rights reserved.
 #
 # This file is part of the SST software package. For license
@@ -64,7 +64,7 @@ class testcase_Links(SSTTestCase):
             cmp_result = testing_compare_filtered_diff("Links_{0}".format(testtype), outfile, reffile, rc == 0, filters)
         else:
             cmpfile = errfile
-            filters.append(RemoveRegexFromLineFilter(r"FATAL: (\[[0-9]+:[0-9]+\])* "))
+            filters.append(RemoveRegexFromLineFilter(r"FATAL: #(\[[0-9]+:[0-9]+\])* "))
             cmp_result = testing_compare_filtered_diff("Links_{0}".format(testtype), errfile, reffile, rc == 0, filters)
         if not cmp_result:
             diffdata = testing_get_diff_data(testtype)

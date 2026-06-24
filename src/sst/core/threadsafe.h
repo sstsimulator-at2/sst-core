@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -51,6 +51,7 @@ class CACHE_ALIGNED_T Barrier
     size_t              origCount;
     std::atomic<bool>   enabled;
     std::atomic<size_t> count, generation;
+    std::mutex          barrierMutex;
 
 public:
     Barrier(size_t count) :
@@ -71,6 +72,7 @@ public:
     /** ONLY call this while nobody is in wait() */
     void resize(size_t newCount)
     {
+        std::lock_guard<std::mutex> lk(barrierMutex);
         count = origCount = newCount;
         generation.store(0);
         enabled.store(true);

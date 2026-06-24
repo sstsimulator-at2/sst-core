@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -165,7 +165,7 @@ to_string(const T& input)
     if constexpr ( std::is_floating_point_v<T> ) {
         std::ostringstream s;
         T                  abs_val = input < 0 ? -input : input;
-        if ( abs_val > (T)10e6 || abs_val < (T)10e-6 )
+        if ( abs_val > (T)1e6 || abs_val < (T)1e-6 )
             s << std::scientific << std::setprecision(std::numeric_limits<double>::max_digits10) << input;
         else
             s << std::fixed << std::setprecision(std::numeric_limits<double>::max_digits10) << input;

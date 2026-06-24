@@ -3,9 +3,25 @@
 #
 
 EXTRA_DIST += \
+    tests/cmd_DebugConsole_Checkpoint_serial0.cmd \
+    tests/cmd_DebugConsole_Checkpoint_serial1.cmd \
+    tests/cmd_DebugConsole_rankparallel0.cmd \
+    tests/cmd_DebugConsole_rankparallel1.cmd \
+    tests/cmd_DebugConsole_r2_rankserial0.cmd \
+    tests/cmd_DebugConsole_r2_rankserial1.cmd \
+    tests/cmd_DebugConsole_r4_rankserial0.cmd \
+    tests/cmd_DebugConsole_r4_rankserial1.cmd \
+    tests/cmd_DebugConsole_serial0.cmd \
+    tests/cmd_DebugConsole_serial1.cmd \
+    tests/cmd_DebugConsole_thread0.cmd \
+    tests/cmd_DebugConsole_thread1.cmd \
+    tests/cmd_DebugConsole_tracebuf.cmd \
     tests/testsuite_default_Checkpoint.py \
+    tests/testsuite_default_Clocks.py \
     tests/testsuite_default_Component.py \
     tests/testsuite_default_ComponentExtension.py \
+    tests/testsuite_default_DebugConsole_Checkpoint.py \
+    tests/testsuite_default_DebugConsole.py \
     tests/testsuite_default_Links.py \
     tests/testsuite_default_MemPoolTest.py \
     tests/testsuite_default_Module.py \
@@ -22,12 +38,13 @@ EXTRA_DIST += \
     tests/testsuite_default_config_input_output.py \
     tests/testsuite_default_partitioner.py \
     tests/testsuite_default_PortModule.py \
+    tests/testsuite_default_testingframework.py \
     tests/testsuite_testengine_testing.py \
     tests/test_Checkpoint.py \
     tests/test_Component.py \
     tests/test_Component_time_overflow.py \
     tests/test_ComponentExtension.py \
-    tests/test_ClockerComponent.py \
+    tests/test_Clocks.py \
     tests/test_DistribComponent_discrete.py \
     tests/test_DistribComponent_expon.py \
     tests/test_DistribComponent_gaussian.py \
@@ -60,9 +77,25 @@ EXTRA_DIST += \
     tests/test_PerfComponent.py \
     tests/test_setnonlocal0.py \
     tests/test_setnonlocal1.py \
+    tests/refFiles/test_Clocks_basic.out \
     tests/refFiles/test_Component.out \
     tests/refFiles/test_Component_time_overflow.out \
     tests/refFiles/test_ComponentExtension.out \
+    tests/refFiles/test_DebugConsole_Checkpoint_serial0.out \
+    tests/refFiles/test_DebugConsole_Checkpoint_serial0_restart.out \
+    tests/refFiles/test_DebugConsole_Checkpoint_serial1.out \
+    tests/refFiles/test_DebugConsole_Checkpoint_serial1_restart.out \
+    tests/refFiles/test_DebugConsole_r2_rankserial0.out \
+    tests/refFiles/test_DebugConsole_r2_rankserial1.out \
+    tests/refFiles/test_DebugConsole_r4_rankserial0.out \
+    tests/refFiles/test_DebugConsole_r4_rankserial1.out \
+    tests/refFiles/test_DebugConsole_rankparallel0.out \
+    tests/refFiles/test_DebugConsole_rankparallel1.out \
+    tests/refFiles/test_DebugConsole_serial0.out \
+    tests/refFiles/test_DebugConsole_serial1.out \
+    tests/refFiles/test_DebugConsole_thread0.out \
+    tests/refFiles/test_DebugConsole_thread1.out \
+    tests/refFiles/test_DebugConsole_tracebuf.out \
     tests/refFiles/test_PerfComponent.out \
     tests/refFiles/test_DistribComponent_discrete.out \
     tests/refFiles/test_DistribComponent_expon.out \
@@ -86,6 +119,7 @@ EXTRA_DIST += \
     tests/refFiles/test_Profiling_event_component.out \
     tests/refFiles/test_Profiling_event_subcomponent.out \
     tests/refFiles/test_MessageGeneratorComponent.out \
+    tests/refFiles/test_MessageMesh.out \
     tests/refFiles/test_MemPool_overflow.out \
     tests/refFiles/test_MemPool_undeleted_items.out \
     tests/refFiles/test_RNGComponent_marsaglia.out \

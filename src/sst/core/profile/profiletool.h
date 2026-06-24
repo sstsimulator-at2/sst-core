@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -13,6 +13,7 @@
 #define SST_CORE_PROFILE_PROFILETOOL_H
 
 #include "sst/core/eli/elementinfo.h"
+#include "sst/core/rankInfo.h"
 #include "sst/core/sst_types.h"
 #include "sst/core/warnmacros.h"
 
@@ -20,7 +21,12 @@
 
 namespace SST {
 class Params;
+
+namespace Util {
+class DataRecord;
 }
+} // namespace SST
+
 
 namespace SST::Profile {
 
@@ -45,7 +51,7 @@ public:
 
     std::string getName() { return name; }
 
-    virtual void outputData(FILE* fp) = 0;
+    virtual void outputData(SST::Util::DataRecord* record, RankInfo rank) = 0;
 
 protected:
     const std::string name;

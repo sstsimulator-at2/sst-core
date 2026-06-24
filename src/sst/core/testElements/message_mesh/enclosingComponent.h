@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -44,28 +44,6 @@ public:
     using HandlerBase = SSTHandlerBase<void, Event*>;
 
     /**
-       Used to create handlers to notify the component when a message
-       has arrived. endpoint when the The callback function is
-       expected to be in the form of:
-
-         void func(Event* ev)
-
-       In which case, the class is created with:
-
-         new PortInterface::Handler<classname>(this, &classname::function_name)
-
-       Or, to add static data, the callback function is:
-
-         void func(Event* ev, dataT data)
-
-       and the class is created with:
-
-         new PortInterface::Handler<classname, dataT>(this, &classname::function_name, data)
-    */
-    template <typename classT, typename dataT = void>
-    using Handler = SSTHandler<void, Event*, classT, dataT>;
-
-    /**
        Used to create checkpointable handlers to notify the component
        when a message has arrived. endpoint when the The callback
        function is expected to be in the form of:
@@ -74,7 +52,7 @@ public:
 
        In which case, the class is created with:
 
-         new PortInterface::Handler2<classname, &classname::function_name>(this)
+         new PortInterface::Handler<classname, &classname::function_name>(this)
 
        Or, to add static data, the callback function is:
 
@@ -82,10 +60,10 @@ public:
 
        and the class is created with:
 
-         new PortInterface::Handler2<classname, &classname::function_name, dataT>(this, data)
+         new PortInterface::Handler<classname, &classname::function_name, dataT>(this, data)
     */
     template <typename classT, auto funcT, typename dataT = void>
-    using Handler2 = SSTHandler2<void, Event*, classT, dataT, funcT>;
+    using Handler = SSTHandler<void, Event*, classT, dataT, funcT>;
 
     virtual void setNotifyOnReceive(HandlerBase* functor) { functor_ = functor; }
 
@@ -171,7 +149,7 @@ private:
     void handleEvent(SST::Event* ev, int port);
 
     std::vector<PortInterface*> ports_;
-    RouteInterface*             route_;
+    RouteInterface*             route_ = nullptr;
 
     // Measuring statistics per component
     std::vector<Statistic<uint64_t>*> stats_;
@@ -225,7 +203,7 @@ public:
 
 
 private:
-    PortInterface* port_;
+    PortInterface* port_ = nullptr;
 };
 
 
@@ -313,9 +291,9 @@ private:
     std::vector<PortInterface*> ports_;
     std::vector<size_t>         counts_;
     int                         my_id_;
-    SST::RNG::Random*           rng_;
+    SST::RNG::Random*           rng_ = nullptr;
 
-    Statistic<uint64_t>* mcnt_;
+    Statistic<uint64_t>* mcnt_ = nullptr;
 };
 
 } // namespace SST::CoreTest::MessageMesh

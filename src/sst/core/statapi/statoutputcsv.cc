@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -20,6 +20,7 @@
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 namespace SST::Statistics {
 
@@ -29,7 +30,7 @@ StatisticOutputCSV::StatisticOutputCSV(Params& outputParameters) :
     m_useCompression = outputParameters.find<bool>("compressed");
     // Announce this output object's name
     Output& out      = getSimulationOutput();
-    out.verbose(CALL_INFO, 1, 0, " : StatisticOutputCSV enabled...\n");
+    out.verbose(CALL_INFO, 2, 0, "StatisticOutputCSV enabled...\n");
     setStatisticOutputName("StatisticOutputCSV");
 }
 

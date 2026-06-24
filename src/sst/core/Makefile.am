@@ -91,12 +91,14 @@ nobase_dist_sst_HEADERS = \
 	eli/statsInfo.h \
 	eli/subcompSlotInfo.h \
 	serialization/serializable.h \
-	serialization/serialize_serializable.h \
 	serialization/serializable_base.h \
 	serialization/serialize.h \
 	serialization/serialize_impl_fwd.h \
 	serialization/objectMap.h \
 	serialization/objectMapDeferred.h \
+	serialization/objectMapTreeBuilder.h \
+	serialization/ObjTree.h \
+	serialization/ObjTreeLeaves.h \
 	serialization/impl/serialize_adapter.h \
 	serialization/impl/serialize_aggregate.h \
 	serialization/impl/serialize_array.h \
@@ -257,7 +259,7 @@ sst_core_sources = \
 	iouse.cc \
 	objectComms.h \
 	objectSerialization.h \
-	simulation_impl.h \
+	simulation.h \
 	watchPoint.h \
 	watchPoint.cc \
 	sst_mpi.h

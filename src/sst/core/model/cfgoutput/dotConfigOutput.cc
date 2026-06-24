@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -16,7 +16,7 @@
 
 #include "sst/core/config.h"
 #include "sst/core/configGraphOutput.h"
-#include "sst/core/simulation_impl.h"
+#include "sst/core/simulation.h"
 #include "sst/core/timeLord.h"
 #include "sst/core/unitAlgebra.h"
 
@@ -112,8 +112,8 @@ DotConfigGraphOutput::generateDot(const ConfigComponent* comp, const ConfigLinkM
         }
         for ( LinkId_t i : comp->links ) {
             const ConfigLink* link = linkMap[i];
-            const int         port = (link->component[0] == comp->id) ? 0 : 1;
-            fprintf(outputFile, "<%s> Port: %s", link->port[port].c_str(), link->port[port].c_str());
+            const int         port = (link->component_[0] == comp->id) ? 0 : 1;
+            fprintf(outputFile, "<%s> Port: %s", link->port_[port].c_str(), link->port_[port].c_str());
             if ( j > 1 ) {
                 fprintf(outputFile, " |\n");
             }
@@ -136,28 +136,28 @@ DotConfigGraphOutput::generateDot(const ConfigComponent* comp, const ConfigLinkM
 void
 DotConfigGraphOutput::generateDot(const ConfigLink* link, const uint32_t dot_verbosity) const
 {
-    UnitAlgebra tb = Simulation_impl::getTimeLord()->getTimeBase();
+    UnitAlgebra tb = Simulation::getTimeLord()->getTimeBase();
 
-    int minLatIdx = (link->latency[0] <= link->latency[1]) ? 0 : 1;
+    int minLatIdx = (link->latency_[0] <= link->latency_[1]) ? 0 : 1;
 
-    auto tmp = tb * link->latency[minLatIdx];
+    auto tmp = tb * link->latency_[minLatIdx];
 
 
     // Link name and latency displayed. Connected to specific port on component
     if ( dot_verbosity >= 8 ) {
-        fprintf(outputFile, "%" PRIu64 ":\"%s\" -- %" PRIu64 ":\"%s\" [label=\"%s\\n%s\"]; \n", link->component[0],
-            link->port[0].c_str(), link->component[1], link->port[1].c_str(), link->name.c_str(),
+        fprintf(outputFile, "%" PRIu64 ":\"%s\" -- %" PRIu64 ":\"%s\" [label=\"%s\\n%s\"]; \n", link->component_[0],
+            link->port_[0].c_str(), link->component_[1], link->port_[1].c_str(), link->name_.c_str(),
             tmp.toStringBestSI().c_str());
 
         // No link name or latency. Connected to specific port on component
     }
     else if ( dot_verbosity >= 6 ) {
-        fprintf(outputFile, "%" PRIu64 ":\"%s\" -- %" PRIu64 ":\"%s\"\n", link->component[0], link->port[0].c_str(),
-            link->component[1], link->port[1].c_str());
+        fprintf(outputFile, "%" PRIu64 ":\"%s\" -- %" PRIu64 ":\"%s\"\n", link->component_[0], link->port_[0].c_str(),
+            link->component_[1], link->port_[1].c_str());
 
         // No link name or latency. Connected to component NOT port
     }
     else {
-        fprintf(outputFile, "%" PRIu64 " -- %" PRIu64 "\n", link->component[0], link->component[1]);
+        fprintf(outputFile, "%" PRIu64 " -- %" PRIu64 "\n", link->component_[0], link->component_[1]);
     }
 }

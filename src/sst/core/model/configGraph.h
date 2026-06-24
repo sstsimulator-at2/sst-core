@@ -1,10 +1,10 @@
 // -*- c++ -*-
 
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -41,7 +41,7 @@ using namespace SST::Statistics;
 
 namespace SST {
 
-class Simulation_impl;
+class Simulation;
 
 class Config;
 class TimeLord;
@@ -75,6 +75,9 @@ class PartitionGraph;
 class ConfigGraph : public SST::Core::Serialization::serializable
 {
 public:
+
+    static bool serialize_for_checkpoint;
+
     /** Print the configuration graph */
     void print(std::ostream& os) const
     {
@@ -158,6 +161,11 @@ public:
     /** Return the map of components */
     ConfigComponentMap_t& getComponentMap() { return comps_; }
 
+    void getNonLocalLinks(std::vector<ConfigLink*>& vec);
+
+    void updateLinkId(ConfigLink* link, LinkId_t new_id);
+    void resortLinkMap();
+
     const std::map<std::string, ConfigStatGroup>& getStatGroups() const;
     ConfigStatGroup*                              getStatGroup(const std::string& name);
 
@@ -166,7 +174,7 @@ public:
     ConfigComponent*       findComponentByName(const std::string& name);
     const ConfigComponent* findComponent(ComponentId_t) const;
 
-    ConfigStatistic* findStatistic(StatisticId_t) const;
+    ConfigStatistic* findStatistic(ComponentId_t, StatisticId_t) const;
 
     /** Return the map of links */
     ConfigLinkMap_t& getLinkMap() { return links_; }
@@ -188,17 +196,24 @@ public:
         return ret;
     }
 
+    void annotateCompRestartLocation(ComponentId_t cid, const std::string& filename, uint64_t offset);
+
     void setComponentConfigGraphPointers();
     void serialize_order(SST::Core::Serialization::serializer& ser) override
     {
         SST_SER(links_);
         SST_SER(comps_);
-        SST_SER(stats_config_);
+
         if ( ser.mode() == SST::Core::Serialization::serializer::UNPACK ) {
             // Need to reinitialize the ConfigGraph ptrs in the
             // ConfigComponents
             setComponentConfigGraphPointers();
         }
+
+        // If we are serializing for checkpointing, we only needed the links and components
+        if ( serialize_for_checkpoint ) return;
+
+        SST_SER(stats_config_);
 
         SST_SER(cpt_ranks);
         SST_SER(cpt_currentSimCycle);
@@ -206,6 +221,8 @@ public:
         SST_SER(cpt_minPart);
         SST_SER(cpt_minPartTC);
         SST_SER(cpt_max_event_id);
+        SST_SER(cpt_remap_partitions);
+        SST_SER(cpt_repartition);
 
         SST_SER(*(cpt_libnames.get()));
         SST_SER(*(cpt_shared_objects.get()));
@@ -220,7 +237,10 @@ public:
     int           cpt_currentPriority = 0;
     SimTime_t     cpt_minPart         = std::numeric_limits<SimTime_t>::max();
     TimeConverter cpt_minPartTC;
-    uint64_t      cpt_max_event_id = 0;
+    uint64_t      cpt_max_event_id     = 0;
+    bool          cpt_remap_partitions = false;
+    bool          cpt_repartition      = false;
+    std::string   cpt_orig_configgraph; // Does not need to be serialized (only needed on rank 0)
 
     std::shared_ptr<std::set<std::string>> cpt_libnames       = std::make_shared<std::set<std::string>>();
     std::shared_ptr<std::vector<char>>     cpt_shared_objects = std::make_shared<std::vector<char>>();
@@ -230,9 +250,10 @@ public:
 
 
 private:
-    friend class Simulation_impl;
+    friend class Simulation;
 
-    Output output;
+    Output   output;
+    LinkId_t link_rank_mask = 0;
 
     ComponentId_t nextComponentId;
 

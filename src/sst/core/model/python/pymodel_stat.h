@@ -1,10 +1,10 @@
 // -*- c++ -*-
 
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -31,10 +31,12 @@ struct PyStatistic;
 
 struct PyStatistic
 {
-    StatisticId_t id;
+    ComponentId_t comp_id;
+    StatisticId_t stat_id;
 
-    explicit PyStatistic(StatisticId_t id) :
-        id(id)
+    explicit PyStatistic(ComponentId_t cid, StatisticId_t sid) :
+        comp_id(cid),
+        stat_id(sid)
     {}
     virtual ~PyStatistic() {}
     ConfigStatistic* getStat();

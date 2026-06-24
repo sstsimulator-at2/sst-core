@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -16,9 +16,12 @@
 #include "sst/core/sst_types.h"
 #include "sst/core/unitAlgebra.h"
 
+#include <string>
+
 namespace SST {
 
 class TimeLord;
+class SyncManager;
 
 /**
    A class to convert between a component's view of time and the
@@ -28,25 +31,11 @@ class TimeConverter
 {
 
     friend class TimeLord;
+    friend class SyncManager;
     friend class SST::Core::Serialization::serialize_impl<TimeConverter>;
     friend class SST::Core::Serialization::serialize_impl<TimeConverter*>;
 
 public:
-    /**
-       Create a new TimeConverter object from a TimeConverter*
-       Use this to create a local TimeConverter from a TimeConverter*
-       returned by the BaseComponent and other public APIs.
-       @param tc TimeConverter to initialize factor from
-     */
-    TimeConverter(TimeConverter* tc) { factor = tc->factor; }
-
-    [[deprecated("Use of shared TimeConverter objects is deprecated. If you're seeing this message, you likely have "
-                 "changed a TimeConverter* to TimeConverter, but are still assigning it to be nullptr at the point of "
-                 "this warning.")]]
-    TimeConverter(std::nullptr_t UNUSED(tc))
-    {
-        factor = 0;
-    }
 
     /**
        Do not directly invoke this constructor from Components to get

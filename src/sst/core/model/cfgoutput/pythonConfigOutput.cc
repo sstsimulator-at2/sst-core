@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -15,7 +15,7 @@
 #include "sst/core/model/cfgoutput/pythonConfigOutput.h"
 
 #include "sst/core/config.h"
-#include "sst/core/simulation_impl.h"
+#include "sst/core/simulation.h"
 #include "sst/core/timeConverter.h"
 #include "sst/core/timeLord.h"
 
@@ -123,17 +123,17 @@ PythonConfigGraphOutput::generateCommonLink(const char* objName, const ConfigCom
         const ConfigLink* link = getGraph()->getLinkMap()[linkID];
 
         // only create the link if the component is the LHS of the port connection
-        if ( link->component[0] == comp->id ) {
+        if ( link->component_[0] == comp->id ) {
             int   srcIdx     = 0;
             int   destIdx    = 1;
-            char* esPortName = makeEscapeSafe(link->port[srcIdx].c_str());
+            char* esPortName = makeEscapeSafe(link->port_[srcIdx].c_str());
             char* destName   = nullptr;
 
-            const std::string& linkName = getLinkObject(linkID, link->name, link->no_cut);
+            const std::string& linkName = getLinkObject(linkID, link->name_, link->no_cut_);
 
-            if ( !link->nonlocal ) {
-                char* edPortName = makeEscapeSafe(link->port[destIdx].c_str());
-                auto  destComp   = getGraph()->findComponent(link->component[1]);
+            if ( !link->nonlocal_ ) {
+                char* edPortName = makeEscapeSafe(link->port_[destIdx].c_str());
+                auto  destComp   = getGraph()->findComponent(link->component_[1]);
                 destName         = generateCompName(destComp);
 
 
@@ -145,8 +145,8 @@ PythonConfigGraphOutput::generateCommonLink(const char* objName, const ConfigCom
                 free(edPortName);
             }
             else {
-                int rank   = link->component[1];
-                int thread = link->latency[1];
+                int rank   = link->component_[1];
+                int thread = link->latency_[1];
                 fprintf(outputFile, "%s.connectNonLocal((%s, \"%s\", \"%s\"),(%d, %d))\n", linkName.c_str(), objName,
                     esPortName, link->latency_str(srcIdx).c_str(), rank, thread);
             }
@@ -383,8 +383,7 @@ PythonConfigGraphOutput::generate(const Config* cfg, ConfigGraph* graph)
     fprintf(outputFile, "# (These reflect the settings from original run and are not necessary in all files)\n");
     fprintf(outputFile, "sst.setProgramOption(\"verbose\", \"%" PRIu32 "\")\n", cfg->verbose());
     fprintf(outputFile, "sst.setProgramOption(\"stop-at\", \"%s\")\n", cfg->stop_at().c_str());
-    fprintf(outputFile, "sst.setProgramOption(\"print-timing-info\", \"%d\")\n", cfg->print_timing());
-    fprintf(outputFile, "sst.setProgramOption(\"timing-info-json\", \"%s\")\n", cfg->timing_json().c_str());
+    fprintf(outputFile, "sst.setProgramOption(\"timing-info\", \"%d\")\n", cfg->print_timing());
     // Ignore stopAfter for now
     // fprintf(outputFile, "sst.setProgramOption(\"stopAfter\", \"%" PRIu32 "\")\n", cfg->stopAfterSec);
     fprintf(

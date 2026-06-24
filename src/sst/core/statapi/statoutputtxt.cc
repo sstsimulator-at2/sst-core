@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -19,6 +19,7 @@
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 namespace SST::Statistics {
 
@@ -416,7 +417,7 @@ StatisticOutputTxt::StatisticOutputTxt(Params& outputParameters) :
 {
     // Announce this output object's name
     Output out = getSimulationOutput();
-    out.verbose(CALL_INFO, 1, 0, " : StatisticOutput%sTxt enabled...\n", m_useCompression ? "Compressed" : "");
+    out.verbose(CALL_INFO, 2, 0, "StatisticOutput%sTxt enabled...\n", m_useCompression ? "Compressed" : "");
     setStatisticOutputName(m_useCompression ? "StatisticOutputCompressedTxt" : "StatisticOutputTxt");
 }
 
@@ -431,7 +432,7 @@ StatisticOutputConsole::StatisticOutputConsole(Params& outputParameters) :
 {
     // Announce this output object's name
     Output out = getSimulationOutput();
-    out.verbose(CALL_INFO, 1, 0, " : StatisticOutputConsole enabled...\n");
+    out.verbose(CALL_INFO, 2, 0, "StatisticOutputConsole enabled...\n");
     setStatisticOutputName("StatisticOutputConsole");
 }
 

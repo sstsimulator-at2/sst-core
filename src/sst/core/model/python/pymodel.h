@@ -1,10 +1,10 @@
 // -*- c++ -*-
 
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -28,6 +28,7 @@
 DISABLE_WARN_DEPRECATED_REGISTER
 #include <Python.h>
 #include <cstddef>
+#include <cstdint>
 REENABLE_WARNING
 
 #include <map>
@@ -72,9 +73,7 @@ protected:
     ComponentId_t                        nextComponentId;
     double                               start_time;
     bool                                 callPythonFinalize;
-#if PY_MINOR_VERSION >= 9
-    bool enablePythonCoverage = false;
-#endif
+    bool                                 enablePythonCoverage = false;
 
 public: /* Public, but private.  Called only from Python functions */
     Config* getConfig() const { return config; }
@@ -178,7 +177,7 @@ private:
 
 std::map<std::string, std::string> generateStatisticParameters(PyObject* statParamDict);
 SST::Params                        pythonToCppParams(PyObject* statParamDict);
-PyObject*                          buildStatisticObject(StatisticId_t id);
+PyObject*                          buildStatisticObject(ComponentId_t comp_id, StatisticId_t stat_id);
 PyObject*                          buildEnabledStatistic(
                              ConfigComponent* cc, const char* statName, PyObject* statParamDict, bool apply_to_children);
 PyObject* buildEnabledStatistics(ConfigComponent* cc, PyObject* statList, PyObject* paramDict, bool apply_to_children);

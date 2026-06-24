@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -21,7 +21,14 @@
 #include <map>
 #include <string>
 
-namespace SST::Core {
+
+namespace SST {
+namespace Util {
+class PerfReporter;
+}
+
+namespace Core {
+
 
 /**
  * Outputs configuration data to a specified file path.
@@ -53,34 +60,9 @@ public:
         THREADS,                   // Threads
     };
 
-    const std::map<Key, const char*> key2cstr = {
-        { LOCAL_MAX_RSS, "local_max_rss" },
-        { GLOBAL_MAX_RSS, "global_max_rss" },
-        { LOCAL_MAX_PF, "local_max_pf" },
-        { GLOBAL_PF, "global_pf" },
-        { GLOBAL_MAX_IO_IN, "global_max_io_in" },
-        { GLOBAL_MAX_IO_OUT, "global_max_io_out" },
-        { GLOBAL_MAX_SYNC_DATA_SIZE, "global_max_sync_data_size" },
-        { GLOBAL_SYNC_DATA_SIZE, "global_sync_data_size" },
-        { MAX_MEMPOOL_SIZE, "max_mempool_size" },
-        { GLOBAL_MEMPOOL_SIZE, "global_mempool_size" },
-        { MAX_BUILD_TIME, "max_build_time" },
-        { MAX_RUN_TIME, "max_run_time" },
-        { MAX_TOTAL_TIME, "max_total_time" },
-        { SIMULATED_TIME_UA, "simulated_time_ua" },
-        { GLOBAL_ACTIVE_ACTIVITIES, "global_active_activities" },
-        { GLOBAL_CURRENT_TV_DEPTH, "global_current_tv_depth" },
-        { GLOBAL_MAX_TV_DEPTH, "global_max_tv_depth" },
-        { RANKS, "ranks" },
-        { THREADS, "threads" },
-    };
-
     TimingOutput(const SST::Output& output, int print_verbosity);
     virtual ~TimingOutput();
-    void setJSON(const std::string& path);
-    void generate();
-    void renderText();
-    void renderJSON();
+    void generate(SST::Util::PerfReporter* reporter);
 
     void set(Key key, uint64_t v);
     void set(Key key, UnitAlgebra v);
@@ -89,14 +71,12 @@ public:
 private:
     SST::Output output_;
     int         print_verbosity_;
-    bool        jsonEnable_;
 
-    std::map<Key, uint64_t>    u64map_    = {};
-    std::map<Key, UnitAlgebra> uamap_     = {};
-    std::map<Key, double>      dmap_      = {};
-    FILE*                      outputFile = nullptr;
+    std::map<Key, uint64_t>    u64map_ = {};
+    std::map<Key, UnitAlgebra> uamap_  = {};
+    std::map<Key, double>      dmap_   = {};
 };
-
-} // namespace SST::Core
+} // namespace Core
+} // namespace SST
 
 #endif // SST_CORE_TIMING_OUTPUT_H

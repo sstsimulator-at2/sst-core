@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -13,11 +13,13 @@
 #define SST_CORE_SYNC_THREADSYNCSIMPLESKIP_H
 
 #include "sst/core/action.h"
+#include "sst/core/simulation.h"
 #include "sst/core/sst_types.h"
 #include "sst/core/sync/syncManager.h"
 #include "sst/core/sync/syncQueue.h"
 #include "sst/core/threadsafe.h"
 
+#include <atomic>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -30,14 +32,14 @@ class Link;
 class TimeConverter;
 class Exit;
 class Event;
-class Simulation_impl;
+class Simulation;
 class ThreadSyncQueue;
 
 class ThreadSyncSimpleSkip : public ThreadSync
 {
 public:
     /** Create a new ThreadSync object */
-    ThreadSyncSimpleSkip(int num_threads, int thread, Simulation_impl* sim);
+    ThreadSyncSimpleSkip(int num_threads, int thread, Simulation* sim);
     ThreadSyncSimpleSkip() {} // For serialization only
     ~ThreadSyncSimpleSkip();
 
@@ -52,6 +54,16 @@ public:
     /** Return exchanged signals after sync */
     bool getSignals(int& end, int& usr, int& alrm) override;
 
+    /** Set interactive flags to exchange during sync */
+    // Separated enter_interactive from from shutdown since they may be needed separately
+    void setShutdownFlags(bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode) override;
+    void setFlags(bool enter_interactive, bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode) override;
+    /** Return exchanged interactive flags after sync */
+    void getShutdownFlags(bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode) override;
+    void getFlags(bool& enter_interactive, bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode) override;
+    /** Clear interactive flags before next run */
+    void clearFlags() override;
+
     /** Cause an exchange of Untimed Data to occur */
     void processLinkUntimedData() override;
     /** Finish link configuration */
@@ -59,10 +71,12 @@ public:
     void prepareForComplete() override;
 
     /** Register a Link which this Sync Object is responsible for */
-    void           registerLink(const std::string& name, Link* link) override;
-    ActivityQueue* registerRemoteLink(int tid, const std::string& name, Link* link) override;
+    void           registerLink(Link* link) override;
+    ActivityQueue* registerRemoteLink(int tid, Link* link) override;
 
     uint64_t getDataSize() const;
+
+    SimTime_t findSyncInterval() override;
 
 
     // static void disable() { disabled = true; barrier.disable(); }
@@ -72,14 +86,17 @@ private:
     // remote data.  It will hold whichever thread registers the link
     // first and will be removed after the second thread registers and
     // the link is properly initialized with the remote data.
-    std::unordered_map<std::string, Link*> link_map;
+    std::unordered_map<LinkId_t, Link*> link_map;
+
+    // Need to keep a list of all the Links in order to do the sync interval optimization after the init() phase. After
+    // than optimization pass completes, the vector can be cleared.
+    std::vector<Link*> link_vec;
 
     std::vector<ThreadSyncQueue*>    queues;
-    SimTime_t                        my_max_period;
     int                              num_threads;
     int                              thread;
     static SimTime_t                 localMinimumNextActivityTime;
-    Simulation_impl*                 sim;
+    Simulation*                      sim;
     static Core::ThreadSafe::Barrier barrier[3];
     double                           totalWaitTime;
     bool                             single_rank;
@@ -87,6 +104,9 @@ private:
     static int                       sig_end_;
     static int                       sig_usr_;
     static int                       sig_alrm_;
+    static std::atomic<bool>         enter_interactive_;
+    static std::atomic<bool>         enter_shutdown_;
+    static std::atomic<unsigned>     shutdown_mode_;
 };
 
 } // namespace SST

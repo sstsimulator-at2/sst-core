@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -59,12 +59,6 @@ public:
 protected:
     friend class SubComponent;
     Component() = default; // For Serialization only
-
-private:
-
-    uint32_t getNextLinkOrder() override { return next_event_order_++; }
-
-    uint32_t next_event_order_ = 1;
 };
 
 } // namespace SST

@@ -1,10 +1,10 @@
 // -*- c++ -*-
 
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -23,6 +23,7 @@
 #include "sst/core/rankInfo.h"
 #include "sst/core/sst_types.h"
 #include "sst/core/statapi/statengine.h"
+#include "sst/core/timeConverter.h"
 #include "sst/core/unitAlgebra.h"
 #include "sst/core/util/basicPerf.h"
 #include "sst/core/util/filesystem.h"
@@ -51,7 +52,6 @@ namespace SST {
 void SST_Exit(int exit_code);
 
 #define _SIM_DBG(fmt, args...) __DBG(DBG_SIM, Sim, fmt, ##args)
-#define STATALLFLAG            "--ALLSTATS--"
 
 class Activity;
 class CheckpointAction;
@@ -69,7 +69,6 @@ class SimulatorHeartbeat;
 class SyncBase;
 class SyncManager;
 class ThreadSync;
-class TimeConverter;
 class TimeLord;
 class TimeVortex;
 class UnitAlgebra;
@@ -78,6 +77,10 @@ namespace Statistics {
 class StatisticOutput;
 class StatisticProcessingEngine;
 } // namespace Statistics
+
+namespace Util {
+class PerfReporter;
+} // namespace Util
 
 namespace pvt {
 
@@ -114,7 +117,7 @@ struct TimeVortexSort
  * Main control class for a SST Simulation.
  * Provides base features for managing the simulation
  */
-class Simulation_impl
+class Simulation
 {
 
 public:
@@ -171,12 +174,12 @@ public:
     using clockMap_t = std::map<std::pair<SimTime_t, int>, Clock*>; /*!< Map of times to clocks */
     // using oneShotMap_t = std::map<int, OneShot*>; /*!< Map of priorities to OneShots */
 
-    ~Simulation_impl();
+    ~Simulation();
 
     /*********  Static Core-only Functions *********/
 
     /** Return a pointer to the singleton instance of the Simulation */
-    static Simulation_impl* getSimulation() { return instanceMap.at(std::this_thread::get_id()); }
+    static Simulation* getSimulation() { return instanceMap.at(std::this_thread::get_id()); }
 
     /** Return the TimeLord associated with this Simulation */
     static TimeLord* getTimeLord() { return &timeLord; }
@@ -189,7 +192,7 @@ public:
      * @param num_ranks - How many Ranks are in the simulation
      * @param restart - Whether this simulation is being restarted from a checkpoint (true) or not
      */
-    static Simulation_impl* createSimulation(
+    static Simulation* createSimulation(
         RankInfo my_rank, RankInfo num_ranks, bool restart, SimTime_t currentSimCycle, int currentPriority);
 
     /**
@@ -220,6 +223,11 @@ public:
     int  performWireUp(ConfigGraph& graph, const RankInfo& myRank, SimTime_t min_part);
     void exchangeLinkInfo();
 
+    /** Functions to compute the current rank and thread sync intervals */
+    void findRankSyncInterval();
+    void findThreadSyncInterval();
+    void updateSyncMinPart();
+
     /** Setup external control actions (forced stops, signal handling */
     void setupSimActions();
 
@@ -237,9 +245,13 @@ public:
 
     void prepare_for_run();
 
+    void setup_interactive_mode();
+
     void run();
 
     void finish();
+
+    void updateSyncInterval();
 
     /** Adjust clocks and time to reflect precise simulation end time which
         may differ in parallel simulations from the time simulation end is detected.
@@ -248,19 +260,10 @@ public:
 
     bool isIndependentThread() { return independent; }
 
-    void printProfilingInfo(FILE* fp);
+    void printProfilingInfo(Util::PerfReporter* reporter);
 
     void printPerformanceInfo();
 
-    /** Register a OneShot event to be called after a time delay
-        Note: OneShot cannot be canceled, and will always callback after
-              the timedelay.
-    */
-    // TimeConverter* registerOneShot(const std::string& timeDelay, int priority, OneShot::HandlerBase* handler, bool
-    // absolute);
-
-    // TimeConverter* registerOneShot(const UnitAlgebra& timeDelay, int priority, OneShot::HandlerBase* handler, bool
-    // absolute);
 
     const std::vector<SimTime_t>& getInterThreadLatencies() const { return interThreadLatencies; }
 
@@ -340,32 +343,33 @@ public:
     /******** API provided through BaseComponent only ***********/
 
     /** Register a handler to be called on a set frequency */
-    TimeConverter* registerClock(const std::string& freq, Clock::HandlerBase* handler, int priority);
+    TimeConverter registerClock(const std::string& freq, Clock::HandlerBase* handler, int priority);
 
-    TimeConverter* registerClock(const UnitAlgebra& freq, Clock::HandlerBase* handler, int priority);
+    TimeConverter registerClock(const UnitAlgebra& freq, Clock::HandlerBase* handler, int priority);
 
-    TimeConverter* registerClock(TimeConverter* tcFreq, Clock::HandlerBase* handler, int priority);
-    TimeConverter* registerClock(TimeConverter& tcFreq, Clock::HandlerBase* handler, int priority);
+    TimeConverter registerClock(TimeConverter tcFreq, Clock::HandlerBase* handler, int priority);
 
     // registerClock function used during checkpoint/restart
     void registerClock(SimTime_t factor, Clock::HandlerBase* handler, int priority);
 
     // Reports that a clock should be present, but doesn't register anything with it
-    void reportClock(SimTime_t factor, int priority);
+    Clock* reportClock(SimTime_t factor, int priority);
 
     /** Remove a clock handler from the list of active clock handlers */
-    void unregisterClock(TimeConverter* tc, Clock::HandlerBase* handler, int priority);
-    void unregisterClock(TimeConverter& tc, Clock::HandlerBase* handler, int priority);
+    void unregisterClock(TimeConverter tc, Clock::HandlerBase* handler, int priority);
 
     /** Reactivate an existing clock and handler.
      * @return time when handler will next fire
      */
-    Cycle_t reregisterClock(TimeConverter* tc, Clock::HandlerBase* handler, int priority);
-    Cycle_t reregisterClock(TimeConverter& tc, Clock::HandlerBase* handler, int priority);
+    Cycle_t reregisterClock(TimeConverter tc, Clock::HandlerBase* handler, int priority);
+
+    /**
+       Register a clock on a restart
+    */
+    void registerClock_restart(SimTime_t factor, Clock::HandlerBase* handler, int priority);
 
     /** Returns the next Cycle that the TimeConverter would fire. */
-    Cycle_t getNextClockCycle(TimeConverter* tc, int priority = CLOCKPRIORITY);
-    Cycle_t getNextClockCycle(TimeConverter& tc, int priority = CLOCKPRIORITY);
+    Cycle_t getNextClockCycle(TimeConverter tc, int priority = CLOCKPRIORITY);
 
     /** Gets the clock the handler is registered with, represented by it's factor
      *
@@ -387,17 +391,18 @@ public:
     // To enable main to set up globals
     friend int ::main(int argc, char** argv);
 
-    Simulation_impl(RankInfo my_rank, RankInfo num_ranks, bool restart, SimTime_t currentSimCycle, int currentPriority);
-    Simulation_impl(const Simulation_impl&)            = delete; // Don't Implement
-    Simulation_impl& operator=(const Simulation_impl&) = delete; // Don't implement
+    Simulation(RankInfo my_rank, RankInfo num_ranks, bool restart, SimTime_t currentSimCycle, int currentPriority);
+    Simulation(const Simulation&)            = delete; // Don't Implement
+    Simulation& operator=(const Simulation&) = delete; // Don't implement
 
     /** Get a handle to a TimeConverter
      * @param cycles Frequency which is the base of the TimeConverter
      */
     TimeConverter minPartToTC(SimTime_t cycles) const;
 
-    std::string initializeCheckpointInfrastructure(const std::string& prefix);
+    static void writeCheckpointConfigGraph(ConfigGraph* graph);
     void        scheduleCheckpoint();
+    void        scheduleInteractiveConsole(const std::string& msg);
 
     /**
        Write the partition specific checkpoint data
@@ -415,7 +420,19 @@ public:
      */
     void checkpoint_write_globals(int checkpoint_id, const std::string& checkpoint_filename,
         const std::string& registry_filename, const std::string& globals_filename);
-    void restart();
+    void restart(ConfigGraph* graph);
+
+    void discoverRemoteLinks();
+
+    /**** Functions/variables needed for discoverRemoteLinks() ****/
+    Core::ThreadSafe::BoundedQueue<std::vector<std::pair<LinkId_t, RankInfo>>*>  local_discover_queue;
+    Core::ThreadSafe::BoundedQueue<std::vector<std::pair<LinkId_t, RankInfo>>*>* remote_discover_queue;
+    std::vector<std::pair<LinkId_t, RankInfo>>*                                  xfer_vec = nullptr;
+
+    void discoverRemoteLinksMoveData(
+        std::vector<std::pair<LinkId_t, RankInfo>>& send_vec, std::vector<std::pair<LinkId_t, RankInfo>>& recv_vec);
+
+    /**************************************************************/
 
     /**
        Function used to get the rank for a link on restart.  A rank of
@@ -423,7 +440,7 @@ public:
        between checkpoint and restart and the original rank info
        stored in the checkpoint should be used.
      */
-    RankInfo getRankForLinkOnRestart(RankInfo rank, uintptr_t UNUSED(tag))
+    RankInfo getRankForLinkOnRestart(RankInfo rank, LinkId_t UNUSED(id))
     {
         if ( serial_restart_ ) return RankInfo(0, 0);
         return RankInfo(rank.rank, rank.thread);
@@ -472,10 +489,23 @@ public:
      */
     void signalShutdown(bool abnormal);
 
+    /** Console Shutdown
+     * Called when a shutdown command or watchpoint shutdown action trigger needs to terminate SST
+     */
+    void consoleShutdown(bool abnormal);
+
+
+    /** Set EndSim
+     * Called by SyncMgr when interactive console ready to shutdown
+     */
+    void setEndSim();
+
     /** Normal Shutdown
      */
     void endSimulation();
     void endSimulation(SimTime_t end);
+
+    void checkIndependent();
 
     enum ShutdownMode_t {
         SHUTDOWN_CLEAN,     /* Normal shutdown */
@@ -512,12 +542,14 @@ public:
     SimulatorHeartbeat*     m_heartbeat = nullptr;
     CheckpointAction*       checkpoint_action_;
     static std::string      checkpoint_directory_;
+    static std::string      checkpoint_configgraph_;
     bool                    endSim = false;
     bool                    independent; // true if no links leave thread (i.e. no syncs required)
     static std::atomic<int> untimed_msg_count;
     unsigned int            untimed_phase;
     volatile sig_atomic_t   signal_arrived_; // true if a signal has arrived
     ShutdownMode_t          shutdown_mode_;
+    bool                    enter_shutdown_ = false;
     bool                    wireUpFinished_;
     RealTimeManager*        real_time_;
     std::string             interactive_type_  = "";
@@ -527,6 +559,14 @@ public:
     bool                    enter_interactive_ = false;
     std::string             interactive_msg_;
     SimTime_t               stop_at_ = 0;
+
+    uint32_t next_link_order_tag_ = 1;
+
+    /**
+       Gets the next value for the order field of the link.  The ordering of events based on links will be based on
+       the order that configureLink() is called.
+    */
+    uint32_t getNextLinkOrderTag() { return next_link_order_tag_++; }
 
     // OneShotManager
     Core::OneShotManager one_shot_manager_;
@@ -615,24 +655,12 @@ public:
     uint64_t rankLatency     = 0; // Serialization time
     uint64_t messageXferSize = 0;
 
-    uint64_t rankExchangeBytes   = 0; // Serialization size
-    uint64_t rankExchangeEvents  = 0; // Serialized events
     uint64_t rankExchangeCounter = 0; // Num rank peer exchanges
 
 
     // Profiling functions
     void incrementSerialCounters(uint64_t count);
-    void incrementExchangeCounters(uint64_t events, uint64_t bytes);
 
-#endif
-
-#if SST_SYNC_PROFILING
-    uint64_t rankSyncCounter   = 0; // Num. of rank syncs
-    uint64_t rankSyncTime      = 0; // Total time rank syncing, in ns
-    uint64_t threadSyncCounter = 0; // Num. of thread syncs
-    uint64_t threadSyncTime    = 0; // Total time thread syncing, in ns
-                                    // Does not include thread syncs as part of rank syncs
-    void     incrementSyncTime(bool rankSync, uint64_t count);
 #endif
 
 #if SST_HIGH_RESOLUTION_CLOCK
@@ -664,19 +692,19 @@ public:
     double complete_phase_start_time_;
     double complete_phase_total_time_;
 
-    static std::unordered_map<std::thread::id, Simulation_impl*> instanceMap;
-    static std::vector<Simulation_impl*>                         instanceVec_;
+    static std::unordered_map<std::thread::id, Simulation*> instanceMap;
+    static std::vector<Simulation*>                         instanceVec_;
 
     /******** Checkpoint/restart tracking data structures ***********/
-    std::map<std::pair<int, uintptr_t>, Link*> link_restart_tracking;
-    std::map<uintptr_t, uintptr_t>             event_handler_restart_tracking;
-    uint32_t                                   checkpoint_id_       = 0;
-    std::string                                checkpoint_prefix_   = "";
-    std::string                                globalOutputFileName = "";
-    std::string                                version_             = "";
-    std::string                                arch_                = "";
-    std::string                                os_                  = "";
-    bool                                       serial_restart_      = false;
+    std::map<LinkId_t, Link*>      link_restart_tracking;
+    std::map<uintptr_t, uintptr_t> event_handler_restart_tracking;
+    uint32_t                       checkpoint_id_       = 0;
+    std::string                    checkpoint_prefix_   = "";
+    std::string                    globalOutputFileName = "";
+    std::string                    version_             = "";
+    std::string                    arch_                = "";
+    std::string                    os_                  = "";
+    bool                           serial_restart_      = false;
 
     // Config object used by the simulation
     static Config       config;

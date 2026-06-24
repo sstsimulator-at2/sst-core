@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -43,7 +43,7 @@ main(int argc, char* argv[])
     cfg.parseCmdLine(argc, argv_copy.get());
 
     if ( cfg.no_env_config() ) config_env = 0;
-    if ( cfg.verbose() ) verbose = 1;
+    verbose = cfg.verbose();
     if ( cfg.print_env() ) print_env = 1;
 
     if ( print_env != 1 ) {
@@ -63,8 +63,8 @@ main(int argc, char* argv[])
         }
     }
 
-    if ( verbose && config_env ) {
-        printf("Launching SST with automatic environment processing enabled...\n");
+    if ( verbose >= 5 && config_env ) {
+        printf("# Launching SST with automatic environment processing enabled...\n");
     }
 
     if ( config_env ) {

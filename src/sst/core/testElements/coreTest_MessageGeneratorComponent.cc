@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -35,13 +35,13 @@ coreTestMessageGeneratorComponent::coreTestMessageGeneratorComponent(ComponentId
     primaryComponentDoNotEndSim();
 
     remote_component = configureLink("remoteComponent",
-        new Event::Handler2<coreTestMessageGeneratorComponent, &coreTestMessageGeneratorComponent::handleEvent>(this));
+        new Event::Handler<coreTestMessageGeneratorComponent, &coreTestMessageGeneratorComponent::handleEvent>(this));
 
     assert(remote_component);
 
     // set our clock
     registerClock(clock_frequency_str,
-        new Clock::Handler2<coreTestMessageGeneratorComponent, &coreTestMessageGeneratorComponent::tick>(this));
+        new Clock::Handler<coreTestMessageGeneratorComponent, &coreTestMessageGeneratorComponent::tick>(this));
 }
 
 coreTestMessageGeneratorComponent::coreTestMessageGeneratorComponent() :

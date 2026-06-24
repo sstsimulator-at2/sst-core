@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -24,6 +24,10 @@
 #include <cstdint>
 #include <map>
 #include <string>
+
+namespace SST::Util {
+class DataRecord;
+}
 
 namespace SST::Profile {
 
@@ -102,7 +106,7 @@ public:
     void beforeHandler(uintptr_t key, const SST::Event* event) override;
     void eventSent(uintptr_t key, Event*& ev) override;
 
-    void outputData(FILE* fp) override;
+    void outputData(SST::Util::DataRecord* record, RankInfo rank) override;
 
 private:
     std::map<std::string, event_data_t> counts_;
@@ -148,7 +152,7 @@ public:
 
     void eventSent(uintptr_t key, Event*& UNUSED(ev)) override { reinterpret_cast<event_data_t*>(key)->send_count++; }
 
-    void outputData(FILE* fp) override;
+    void outputData(SST::Util::DataRecord* record, RankInfo rank) override;
 
 private:
     typename T::time_point              start_time_;

@@ -1,10 +1,10 @@
 // -*- c++ -*-
 
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -29,18 +29,7 @@ REENABLE_WARNING
 // returns const char*.  No need to delete, it is managed by object it was called on
 #define SST_ConvertToCppString(x) PyUnicode_AsUTF8(x)
 
-#if PY_MINOR_VERSION == 8
-#define SST_TP_PRINT_DEP nullptr,
-// #define SST_TP_PRINT_DEP DISABLE_WARN_DEPRECATED_DECLARATION nullptr, REENABLE_WARNING
-#else
-#define SST_TP_PRINT_DEP
-#endif
-
-#if PY_MINOR_VERSION >= 8
 #define SST_TP_VECTORCALL nullptr,
-#else
-#define SST_TP_VECTORCALL
-#endif
 
 #if PY_MINOR_VERSION >= 12
 #define SST_TP_WATCHED 0,

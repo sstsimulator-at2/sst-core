@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -30,7 +30,7 @@ class ActivityQueue;
 class BaseComponent;
 class TimeConverter;
 class LinkPair;
-class Simulation_impl;
+class Simulation;
 
 class UnitAlgebra;
 
@@ -56,7 +56,7 @@ class SST::Core::Serialization::serialize_impl<Link*>
 class alignas(64) Link
 {
     enum Type_t : uint16_t { POLL, HANDLER, SYNC, UNINITIALIZED };
-    enum Mode_t : uint16_t { INIT, RUN, COMPLETE };
+    enum Mode_t : uint8_t { INIT, RUN, COMPLETE };
 
     friend class SST::Core::Serialization::serialize_impl<Link*>;
 
@@ -124,7 +124,7 @@ public:
     friend class LinkPair;
     friend class RankSync;
     friend class ThreadSync;
-    friend class Simulation_impl;
+    friend class Simulation;
     friend class SyncManager;
     friend class ComponentInfo;
     friend class BaseComponent;
@@ -147,9 +147,6 @@ public:
 
        @param timebase Base units of cycles
     */
-    [[deprecated("Use of shared TimeConverter objects is deprecated. Use 'addSendLatency(SimTime_t cycles, "
-                 "TimeConverter timebase)' (i.e., no pointer) instead.")]]
-    void addSendLatency(SimTime_t cycles, TimeConverter* timebase);
     void addSendLatency(SimTime_t cycles, TimeConverter timebase);
 
     /**
@@ -168,9 +165,6 @@ public:
 
        @param timebase Base units of cycles
     */
-    [[deprecated("Use of shared TimeConverter objects is deprecated. Use 'addRecvLatency(SimTime_t cycles, "
-                 "TimeConverter timebase)' (i.e., no pointer) instead.")]]
-    void addRecvLatency(SimTime_t cycles, TimeConverter* timebase);
     void addRecvLatency(SimTime_t cycles, TimeConverter timebase);
 
     /**
@@ -194,24 +188,6 @@ public:
        @return Functor used for event delivery
     */
     Event::HandlerBase* getFunctor();
-
-    /**
-       Sends an Event over a Link with an additional delay specified with a TimeConverter. I.e. the total delay is the
-       Link's delay + the additional specified delay.
-
-       @param delay Additional delay
-
-       @param tc TimeConverter to specify timebase for the additional delay
-
-       @param event Event to send
-    */
-    [[deprecated(
-        "Use of shared TimeConverter objects is deprecated. Use 'send(SimTime_t delay, const TimeConverter& tc, "
-        "Event* event)' instead.")]]
-    inline void send(SimTime_t delay, TimeConverter* tc, Event* event)
-    {
-        send(delay, *tc, event);
-    }
 
     /**
        Sends an Event over a Link with an additional delay specified with a TimeConverter. I.e. the total delay is the
@@ -257,15 +233,6 @@ public:
 
        @param tc TimeConverter object for the timebase
     */
-    [[deprecated("Use of shared TimeConverter objects is deprecated. Use 'setDefaultTimeBase(TimeConverter tc)', "
-                 "(i.e., no pointer) instead.")]]
-    void setDefaultTimeBase(TimeConverter* tc);
-
-    /**
-       Manually set the default defaultTimeBase
-
-       @param tc TimeConverter object for the timebase
-    */
     void setDefaultTimeBase(TimeConverter tc);
 
     /**
@@ -273,21 +240,20 @@ public:
 
        @return the default timebase for this Link
     */
-    TimeConverter* getDefaultTimeBase();
+    TimeConverter getDefaultTimeBase();
 
     /**
        Return the ID of this Link
 
        @return the unique ID for this Link
     */
-    LinkId_t getId() { return tag; }
-
-    /**
-       Return the default timebase for this Link
-
-       @return Default timebase for this Link
-    */
-    const TimeConverter* getDefaultTimeBase() const;
+    LinkId_t getId()
+    {
+        if ( has_tool_list )
+            return (*attached_tools)[0].second;
+        else
+            return id;
+    }
 
     /**
        Send data during the init() or complete() phase.
@@ -309,6 +275,7 @@ public:
        @return True if Link has been configured, false otherwise
     */
     bool isConfigured() { return type != UNINITIALIZED; }
+
 
 #ifdef __SST_DEBUG_EVENT_TRACKING__
     void setSendingComponentInfo(const std::string& comp_in, const std::string& type_in, const std::string& port_in)
@@ -341,7 +308,7 @@ protected:
     */
     void setTag(uint32_t new_tag)
     {
-        if ( tag != type_max<uint32_t> ) pair_link->tag = new_tag;
+        if ( tag != bit_util::type_max<uint32_t> ) pair_link->tag = new_tag;
 
         // Interleaved links
         // pair_link->tag = new_tag;
@@ -350,6 +317,23 @@ protected:
         // if ( tag != type_max<uint32_t> ) pair_link->tag = new_tag;
         // else pair_link->tag = 0x80000000 | new_tag;
     }
+
+    /**
+       Get the latency on the link in units of core atomic time base
+
+       NOTE: This is a core only API and not part of the public stable API
+    */
+    SimTime_t getLatency() { return latency; }
+
+    /**
+       Get the delivery_info for the link
+    */
+    uintptr_t getDeliveryInfo() { return delivery_info; }
+
+    /**
+       Get the pair_link
+    */
+    Link* getPairLink() { return pair_link; }
 
     /**
        Sends an Event over a Link with an additional delay specified with a TimeConverter. I.e. the total delay is the
@@ -373,6 +357,12 @@ protected:
     {
         event->updateDeliveryInfo(delivery_info);
     }
+
+    /**
+       Variable used by Link restarts to know whether stored rank data for remote links is still valid (i.e. did we
+       restart with the exact same rank/thread count or not).
+    */
+    static bool is_restart_same_parallelism;
 
     // Since Links are found in pairs, I will keep all the information
     // needed for me to send and deliver an event to the other side of
@@ -418,6 +408,7 @@ private:
     SimTime_t& current_time;
     Type_t     type;
     Mode_t     mode;
+    bool       has_tool_list = false;
     uint32_t   tag;
 
     /**
@@ -431,9 +422,7 @@ private:
        If it sends to a TimeVortex (or DirectLinkQueue), it is the value used for enforce_link_order (if that feature is
        enabled).
     */
-    explicit Link(uint32_t tag);
-
-    Link(const Link& l);
+    explicit Link(LinkId_t id);
 
     /**
        Specifies that this Link has no callback, and is poll-based only
@@ -458,7 +447,44 @@ private:
 
 
     using ToolList = std::vector<std::pair<AttachPoint*, uintptr_t>>;
-    ToolList* attached_tools;
+
+    /**
+       We need to keep the Link object to 64-bits so we need to keep the ID and the attached tools in the same 8-bytes.
+       This will normally hold the 64-bit id for the link, but if we have attached tools, then the id for the Link will
+       be stored in the first entry of the attached_tools list.
+
+       The has_tool_list member variable stores which data is currently stored in this union.  If has_tool_list is true,
+       then the union's attached_tools variable is currently active.  Otherwise, it is storing the Link id.
+    */
+    union {
+        /**
+           The Link id is a globally unique id.  For serial loads, the ids start at 1 and increment for each new Link.
+
+           On a parallel load, the top 32-bits is filled with the MPI rank and the bottom 32-bits start at 1 and
+           increment for each new rank.  The ids for links that cross a rank boundary need to be reconciled so that the
+           Link objects on both ranks agree on the ID.  This is done by having the "lower" rank send the Link name and
+           it's id for the Link to the "higher" rank, which will then use that id for the Link. "Higher" and "lower" are
+           determined in a way that hopefully spreads out the MPI traffic across all the ranks and isn't just a direct
+           greater/less than comparison. It is determined as follows:
+
+           1 - A rank is lower than the N/2 ranks after it, wrapping around to 0 when needed.
+
+           2 - A rank is higher than the N/2 ranks before it, wrapping around to N-1 when needed.
+
+          The id is used in several places:
+          - When exchanging Link pointers to put in the delivery_info field
+          - As the global name for connecting links on a restart from checkpoint
+
+        */
+        LinkId_t id;
+
+        /**
+           This stores any tools connected to the Link::AttachPoint.  The first entry in the list will always contain
+           the Link id since the pointer to the attached_tools list is now using that memory location.
+         */
+        ToolList* attached_tools;
+    };
+
 
     /**
        Manually set the default time base

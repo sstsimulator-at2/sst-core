@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -17,6 +17,9 @@
 #include "sst/core/model/configGraph.h"
 #include "sst/core/util/filesystem.h"
 
+#include "nlohmann/json.hpp"
+
+#include <fstream>
 #include <map>
 #include <string>
 
@@ -30,16 +33,18 @@ public:
     virtual void generate(const Config* cfg, ConfigGraph* graph) override;
 
 private:
-    std::map<SST::StatisticId_t, std::string> sharedStatMap;
+    std::map<SST::StatisticId_t, std::string>
+        shared_stat_map_; // Used to identify shared stat objects vs. stats that map to those objects
 
     std::string pathStr;
 
-    void outputProgramOptions(const Config* cfg, std::ofstream& ofs);
-    void outputSharedParams(std::ofstream& ofs);
-    void outputStatisticsOptions(ConfigGraph* graph, std::ofstream& ofs);
-    void outputStatisticsGroups(ConfigGraph* graph, std::ofstream& ofs);
-    void outputComponents(const Config* cfg, ConfigGraph* graph, std::ofstream& ofs);
-    void outputLinks(ConfigGraph* graph, std::ofstream& ofs);
+    void                   outputProgramOptions(const Config* cfg, std::ofstream& ofs);
+    void                   outputSharedParams(std::ofstream& ofs);
+    void                   outputStatisticsOptions(ConfigGraph* graph, std::ofstream& ofs);
+    void                   outputStatisticsGroups(ConfigGraph* graph, std::ofstream& ofs);
+    void                   outputComponents(const Config* cfg, ConfigGraph* graph, std::ofstream& ofs);
+    nlohmann::ordered_json outputSubComponent(ConfigComponent* sub, std::ofstream& ofs);
+    void                   outputLinks(ConfigGraph* graph, std::ofstream& ofs);
 };
 
 } // namespace SST::Core

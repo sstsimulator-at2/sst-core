@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -16,9 +16,10 @@
 #include "sst/core/event.h"
 #include "sst/core/exit.h"
 #include "sst/core/link.h"
-#include "sst/core/simulation_impl.h"
+#include "sst/core/simulation.h"
 #include "sst/core/timeConverter.h"
 
+#include <atomic>
 #include <cstddef>
 #include <mutex>
 
@@ -27,7 +28,7 @@ namespace SST {
 SimTime_t ThreadSyncSimpleSkip::localMinimumNextActivityTime = 0;
 
 /** Create a new ThreadSyncSimpleSkip object */
-ThreadSyncSimpleSkip::ThreadSyncSimpleSkip(int num_threads, int thread, Simulation_impl* sim) :
+ThreadSyncSimpleSkip::ThreadSyncSimpleSkip(int num_threads, int thread, Simulation* sim) :
     ThreadSync(),
     num_threads(num_threads),
     thread(thread),
@@ -50,8 +51,8 @@ ThreadSyncSimpleSkip::ThreadSyncSimpleSkip(int num_threads, int thread, Simulati
     else
         single_rank = true;
 
-    my_max_period = sim->getInterThreadMinLatency();
-    nextSyncTime  = my_max_period;
+    max_period   = sim->getInterThreadMinLatency();
+    nextSyncTime = max_period;
 }
 
 ThreadSyncSimpleSkip::~ThreadSyncSimpleSkip()
@@ -66,14 +67,15 @@ ThreadSyncSimpleSkip::~ThreadSyncSimpleSkip()
 }
 
 void
-ThreadSyncSimpleSkip::registerLink(const std::string& name, Link* link)
+ThreadSyncSimpleSkip::registerLink(Link* link)
 {
     std::scoped_lock slock(lock);
-    auto             iter = link_map.find(name);
+    link_vec.push_back(getPairLink(link));
+    auto iter = link_map.find(link->getId());
     if ( iter == link_map.end() ) {
-        // I have initialized first, so just put the name and link in
+        // I have initialized first, so just put the id and link in
         // the map
-        link_map[name] = link;
+        link_map[link->getId()] = link;
     }
     else {
         // I already have the remote info, so initialize the link data
@@ -84,14 +86,14 @@ ThreadSyncSimpleSkip::registerLink(const std::string& name, Link* link)
 }
 
 ActivityQueue*
-ThreadSyncSimpleSkip::registerRemoteLink(int tid, const std::string& name, Link* link)
+ThreadSyncSimpleSkip::registerRemoteLink(int tid, Link* link)
 {
     std::scoped_lock slock(lock);
-    auto             iter = link_map.find(name);
+    auto             iter = link_map.find(link->getId());
     if ( iter == link_map.end() ) {
-        // I have initialized first, so just put the name and link in
+        // I have initialized first, so just put the id and link in
         // the map
-        link_map[name] = link;
+        link_map[link->getId()] = link;
     }
     else {
         // I already have the local info, so initialize the link data
@@ -128,7 +130,7 @@ ThreadSyncSimpleSkip::after()
     // Use this nextSyncTime computation for skipping
 
     auto nextmin     = sim->getLocalMinimumNextActivityTime();
-    auto nextminPlus = nextmin + my_max_period;
+    auto nextminPlus = nextmin + max_period;
     nextSyncTime     = nextmin > nextminPlus ? nextmin : nextminPlus;
 }
 
@@ -181,6 +183,26 @@ ThreadSyncSimpleSkip::getDataSize() const
     return count;
 }
 
+SimTime_t
+ThreadSyncSimpleSkip::findSyncInterval()
+{
+    SimTime_t min_lat = bit_util::type_max<SimTime_t>;
+    // Need to look through all my links and find the minimum latency
+    for ( auto* x : link_vec ) {
+        // I need to see if addRecvLatency() was called on the remote side of the link.  We have a pointer to that Link
+        // (as a uintptr_t) in delivery_info.
+        SimTime_t latency = getLatency(x) + getLatency(reinterpret_cast<Link*>(getDeliveryInfo(x)));
+        if ( latency < min_lat ) min_lat = latency;
+    }
+
+    link_vec.clear();
+    updateMinimumLatency(min_lat);
+
+    // Need to barrier, then return the minimum latency
+    barrier[0].wait();
+    return updateMinimumLatency();
+}
+
 void
 ThreadSyncSimpleSkip::setSignals(int end, int usr, int alrm)
 {
@@ -198,9 +220,64 @@ ThreadSyncSimpleSkip::getSignals(int& end, int& usr, int& alrm)
     return sig_end_ || sig_usr_ || sig_alrm_;
 }
 
+void
+ThreadSyncSimpleSkip::setShutdownFlags(bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode)
+{
+    if ( enter_shutdown ) {
+        enter_shutdown_.store(enter_shutdown);
+        shutdown_mode_.store(static_cast<unsigned>(shutdown_mode));
+    }
+}
+
+
+void
+ThreadSyncSimpleSkip::setFlags(bool enter_interactive, bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode)
+{
+    if ( enter_interactive ) enter_interactive_.store(enter_interactive);
+
+    setShutdownFlags(enter_shutdown, shutdown_mode);
+}
+
+void
+ThreadSyncSimpleSkip::getShutdownFlags(bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode)
+{
+    enter_shutdown = enter_shutdown_.load();
+    switch ( shutdown_mode_ ) {
+    case 0:
+        shutdown_mode = Simulation::ShutdownMode_t::SHUTDOWN_CLEAN;
+        break;
+    case 1:
+        shutdown_mode = Simulation::ShutdownMode_t::SHUTDOWN_SIGNAL;
+        break;
+    case 2:
+        shutdown_mode = Simulation::ShutdownMode_t::SHUTDOWN_EMERGENCY;
+        break;
+    }
+}
+
+void
+ThreadSyncSimpleSkip::getFlags(bool& enter_interactive, bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode)
+{
+
+    enter_interactive = enter_interactive_.load();
+    getShutdownFlags(enter_shutdown, shutdown_mode);
+}
+
+void
+ThreadSyncSimpleSkip::clearFlags()
+{
+    enter_interactive_.store(false);
+    enter_shutdown_.store(false);
+    shutdown_mode_.store(0);
+}
+
+
 Core::ThreadSafe::Barrier ThreadSyncSimpleSkip::barrier[3];
 int                       ThreadSyncSimpleSkip::sig_end_(0);
 int                       ThreadSyncSimpleSkip::sig_usr_(0);
 int                       ThreadSyncSimpleSkip::sig_alrm_(0);
+std::atomic<bool>         ThreadSyncSimpleSkip::enter_interactive_(false);
+std::atomic<bool>         ThreadSyncSimpleSkip::enter_shutdown_(false);
+std::atomic<unsigned>     ThreadSyncSimpleSkip::shutdown_mode_(0);
 
 } // namespace SST

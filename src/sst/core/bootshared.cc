@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -75,16 +75,16 @@ boot_sst_executable(const char* binary, const int verbose, char* argv[], const i
         snprintf(real_binary_path, PATH_MAX, "%s/libexec/%s", SST_INSTALL_PREFIX, binary);
     }
 
-    if ( verbose ) {
+    if ( verbose >= 5 ) {
         char** check_env = environ;
         while ( nullptr != check_env && nullptr != check_env[0] ) {
-            printf("SST Environment Variable: %s\n", check_env[0]);
+            printf("# SST Environment Variable: %s\n", check_env[0]);
             check_env++;
         }
     }
 
-    if ( verbose ) {
-        printf("Launching SST executable (%s)...\n", real_binary_path);
+    if ( verbose >= 5 ) {
+        printf("# Launching SST executable (%s)...\n", real_binary_path);
     }
 
     // Flush standard out in case binary crashes

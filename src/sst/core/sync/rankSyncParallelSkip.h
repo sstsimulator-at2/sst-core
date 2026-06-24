@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -27,6 +27,10 @@ namespace SST {
 class RankSyncQueue;
 class TimeConverter;
 
+namespace Profile {
+class SyncProfileToolList;
+};
+
 class RankSyncParallelSkip : public RankSync
 {
 public:
@@ -36,9 +40,8 @@ public:
     virtual ~RankSyncParallelSkip();
 
     /** Register a Link which this Sync Object is responsible for */
-    ActivityQueue* registerLink(
-        const RankInfo& to_rank, const RankInfo& from_rank, const std::string& name, Link* link) override;
-    void execute(int thread) override;
+    ActivityQueue* registerLink(const RankInfo& to_rank, const RankInfo& from_rank, Link* link) override;
+    void           execute(int thread) override;
 
     /** Cause an exchange of Untimed Data to occur */
     void exchangeLinkUntimedData(int thread, std::atomic<int>& msg_count) override;
@@ -52,11 +55,25 @@ public:
     /** Return exchanged signals after sync */
     bool getSignals(int& end, int& usr, int& alrm) override;
 
+    /** Set interactive flags to exchange during sync */
+    // Separated enter_interactive from from shutdown since they may be needed separately
+    void setShutdownFlags(bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode) override;
+    void setCkptFlag(bool generate_ckpt) override;
+    void setFlags(bool enter_interactive, bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode) override;
+    /** Return exchanged interactive flags after sync */
+    void getShutdownFlags(bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode) override;
+    void getCkptFlag(bool& generate_ckpt) override;
+    void getFlags(bool& enter_interactive, bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode) override;
+    /** Clear interactive flags before next run */
+    void clearFlags() override;
+
     SimTime_t getNextSyncTime() override { return myNextSyncTime; }
 
     void setRestartTime(SimTime_t time) override;
 
     uint64_t getDataSize() const override;
+
+    void setProfileToolList(Profile::SyncProfileToolList* profile_tools) override;
 
 private:
     static SimTime_t myNextSyncTime;
@@ -133,10 +150,16 @@ private:
     Core::ThreadSafe::Barrier slaveExchangeDoneBarrier;
     Core::ThreadSafe::Barrier allDoneBarrier;
 
-    Core::ThreadSafe::Spinlock lock;
-    static int                 sig_end_;
-    static int                 sig_usr_;
-    static int                 sig_alrm_;
+    Profile::SyncProfileToolList* profile_tools_ = nullptr;
+
+    Core::ThreadSafe::Spinlock   lock;
+    static int                   sig_end_;
+    static int                   sig_usr_;
+    static int                   sig_alrm_;
+    static std::atomic<bool>     enter_interactive_;
+    static std::atomic<bool>     enter_shutdown_;
+    static std::atomic<unsigned> shutdown_mode_;
+    static std::atomic<bool>     generate_ckpt_;
 };
 
 } // namespace SST

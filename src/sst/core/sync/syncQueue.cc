@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -14,20 +14,11 @@
 #include "sst/core/sync/syncQueue.h"
 
 #include "sst/core/event.h"
+#include "sst/core/profile/syncProfileTool.h"
 #include "sst/core/serialization/serializer.h"
-#include "sst/core/simulation_impl.h"
+#include "sst/core/simulation.h"
 
 #include <mutex>
-
-#if SST_EVENT_PROFILING
-#define SST_EVENT_PROFILE_SIZE(events, bytes)                    \
-    do {                                                         \
-        Simulation_impl* sim = Simulation_impl::getSimulation(); \
-        sim->incrementExchangeCounters(events, bytes);           \
-    } while ( 0 );
-#else
-#define SST_EVENT_PROFILE_SIZE(events, bytes)
-#endif
 
 namespace SST {
 
@@ -100,7 +91,7 @@ RankSyncQueue::getData()
 
     size_t size = ser.size();
 
-    SST_EVENT_PROFILE_SIZE(activities.size(), size)
+    if ( profile_tools_ ) profile_tools_->updateSyncSize(size, activities.size());
 
     if ( buf_size < (size + sizeof(RankSyncQueue::Header)) ) {
         if ( buffer != nullptr ) {

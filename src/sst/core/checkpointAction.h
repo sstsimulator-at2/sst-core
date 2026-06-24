@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -19,6 +19,7 @@
 #include "sst/core/rankInfo.h"
 #include "sst/core/sst_types.h"
 #include "sst/core/threadsafe.h"
+#include "sst/core/timeConverter.h"
 
 #include <cstdint>
 #include <set>
@@ -26,7 +27,7 @@
 
 namespace SST {
 
-class Simulation_impl;
+class Simulation;
 class TimeConverter;
 
 namespace Checkpointing {
@@ -47,11 +48,16 @@ std::string createUniqueDirectory(const std::string basename);
 void removeDirectory(const std::string name);
 
 /**
-   Initializes the infrastructure needed for checkpointing.  Uses the
-   createUniqueDirectory() function to create the directory, then
-   broadcasts the name to all ranks.
+   Initializes the infrastructure needed for checkpointing.  Uses the createUniqueDirectory() function to create the
+   directory, then broadcasts the name to all ranks.
+
+   This function is called twice.  Once after graph parititioning and once right after creation of the realtime manager
+   in the Simulation object. The first call will create the directory structure if any of the command line options other
+   than realtime actions enable checkpointing.  This is needed so that the system can write out the ConfigGraph for
+   repartitioned restarts while is still has it in one piece (note, this is not done for parallel loads).  We check
+   again after the realtime manager is created in case the only way to trigger a checkpoint is through signals.
  */
-std::string initializeCheckpointInfrastructure(Config* cfg, bool rt_can_ckpt, int myRank);
+std::string initializeCheckpointInfrastructure(Config* cfg, bool can_ckpt, int myRank);
 
 } // namespace Checkpointing
 
@@ -65,7 +71,7 @@ public:
     /**
     Create a new checkpoint object for the simulation core to initiate checkpoints
     */
-    CheckpointAction(Config* cfg, RankInfo this_rank, Simulation_impl* sim, TimeConverter* period);
+    CheckpointAction(Config* cfg, RankInfo this_rank, Simulation* sim, TimeConverter period);
     ~CheckpointAction() = default;
 
     /**
@@ -74,10 +80,16 @@ public:
        CheckpointAction is managed by the SyncManager in parallel
        runs.
      */
-    void insertIntoTimeVortex(Simulation_impl* sim);
+    void insertIntoTimeVortex(Simulation* sim);
+
+    /** Get checkpoint flag */
+    bool getCheckpoint();
 
     /** Generate a checkpoint next time check() is called */
     void setCheckpoint();
+
+    /** Get simtime checkpoint period */
+    TimeConverter getPeriod();
 
     /** Called by TimeVortex to trigger checkpoint on simulation clock interval - not used in parallel simulation */
     void execute() override;
@@ -97,15 +109,15 @@ private:
     CheckpointAction(const CheckpointAction&)            = delete;
     CheckpointAction& operator=(const CheckpointAction&) = delete;
 
-    void createCheckpoint(Simulation_impl* sim); // The actual checkpoint operation
+    void createCheckpoint(Simulation* sim); // The actual checkpoint operation
 
-    RankInfo       rank_;          // RankInfo for this thread/rank
-    TimeConverter* period_;        // Simulation time interval for scheduling or nullptr if not set
-    double         last_cpu_time_; // Last time a checkpoint was triggered
-    bool           generate_;      // Whether a checkpoint should be done next time check() is called
-    SimTime_t      next_sim_time_; // Next simulationt ime a checkpoint should trigger at or 0 if not applicable
-    std::string    dir_format_;    // Format string for checkpoint directory names
-    std::string    file_format_;   // Format string for checkpoint file names
+    RankInfo      rank_;          // RankInfo for this thread/rank
+    TimeConverter period_;        // Simulation time interval for scheduling or nullptr if not set
+    double        last_cpu_time_; // Last time a checkpoint was triggered
+    bool          generate_;      // Whether a checkpoint should be done next time check() is called
+    SimTime_t     next_sim_time_; // Next simulationt ime a checkpoint should trigger at or 0 if not applicable
+    std::string   dir_format_;    // Format string for checkpoint directory names
+    std::string   file_format_;   // Format string for checkpoint file names
 };
 
 } // namespace SST

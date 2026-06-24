@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -13,23 +13,25 @@
 #define SST_CORE_INTERACTIVE_CONSOLE_H
 
 #include "sst/core/action.h"
+#include "sst/core/componentInfo.h"
 #include "sst/core/cputimer.h"
 #include "sst/core/eli/elementinfo.h"
 #include "sst/core/output.h"
 #include "sst/core/rankInfo.h"
 #include "sst/core/sst_types.h"
 #include "sst/core/threadsafe.h"
+#include "sst/core/timeConverter.h"
 #include "sst/core/unitAlgebra.h"
 
 #include <cstdint>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace SST {
 
 class Params;
-class Simulation_impl;
-class TimeConverter;
+class Simulation;
 
 namespace Interactive {
 /* Utility functions needed to manage directories */
@@ -57,8 +59,12 @@ public:
     InteractiveConsole()          = default;
     virtual ~InteractiveConsole() = default;
 
+    /** Interactive Console execute return codes: Positive number is thread ID to switch to, negative is other state */
+    enum ICretcode { DONE = -1, SUMMARY = -2 };
     /** Called by TimeVortex to trigger checkpoint on simulation clock interval - not used in parallel simulation */
-    virtual void execute(const std::string& msg) = 0;
+    virtual int  execute(const std::string& msg) = 0;
+    /** Called by SyncManager to get summary info for each thread */
+    virtual void summary()                       = 0;
 
 protected:
     // Functions that can be called by child class
@@ -98,7 +104,7 @@ protected:
     void getMemPoolUsage(int64_t& bytes, int64_t& active_entries);
 
     /** Get a TimeConverter */
-    TimeConverter* getTimeConverter(const std::string& time);
+    TimeConverter getTimeConverter(const std::string& time);
 
     /** Get the list of Components */
     void getComponentList(std::vector<std::pair<std::string, SST::Component*>>& vec);
@@ -122,6 +128,8 @@ protected:
     void schedule_interactive(SimTime_t time_offset, const std::string& msg);
 
     SST::Core::Serialization::ObjectMap* getComponentObjectMap();
+
+    const SST::ComponentInfoMap& getComponentInfoMap();
 
     void simulationShutdown();
 

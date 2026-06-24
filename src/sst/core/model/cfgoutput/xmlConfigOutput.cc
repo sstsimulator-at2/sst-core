@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -76,11 +76,11 @@ XMLConfigGraphOutput::generateXML(
     const std::string& indent, const ConfigLink* link, const ConfigComponentMap_t& compMap) const
 {
 
-    const ConfigComponent* link_left  = compMap[link->component[0]];
-    const ConfigComponent* link_right = compMap[link->component[1]];
+    const ConfigComponent* link_left  = compMap[link->component_[0]];
+    const ConfigComponent* link_right = compMap[link->component_[1]];
 
     fprintf(outputFile,
         "%s<link id=\"%s\" name=\"%s\"\n%s%sleft=\"%s\" right=\"%s\"\n%s%sleftport=\"%s\" rightport=\"%s\"/>\n",
-        indent.c_str(), link->name.c_str(), link->name.c_str(), indent.c_str(), "   ", link_left->name.c_str(),
-        link_right->name.c_str(), indent.c_str(), "   ", link->port[0].c_str(), link->port[1].c_str());
+        indent.c_str(), link->name_.c_str(), link->name_.c_str(), indent.c_str(), "   ", link_left->name.c_str(),
+        link_right->name.c_str(), indent.c_str(), "   ", link->port_[0].c_str(), link->port_[1].c_str());
 }

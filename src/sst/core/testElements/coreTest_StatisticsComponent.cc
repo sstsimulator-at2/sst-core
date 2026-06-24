@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -67,7 +67,7 @@ StatisticsComponentInt::StatisticsComponentInt(ComponentId_t id, Params& params)
 
     // First 1ns Clock
     output.output("REGISTER CLOCK #1 at 1 ns\n");
-    registerClock("1 ns", new Clock::Handler2<StatisticsComponentInt, &StatisticsComponentInt::Clock1Tick>(this));
+    registerClock("1 ns", new Clock::Handler<StatisticsComponentInt, &StatisticsComponentInt::Clock1Tick>(this));
 
     /////////////////////////////////////////
     // Create the Statistics objects
@@ -210,7 +210,7 @@ StatisticsComponentFloat::StatisticsComponentFloat(ComponentId_t id, Params& par
 
     // First 1ns Clock
     output.output("REGISTER CLOCK #1 at 1 ns\n");
-    registerClock("1 ns", new Clock::Handler2<StatisticsComponentFloat, &StatisticsComponentFloat::Clock1Tick>(this));
+    registerClock("1 ns", new Clock::Handler<StatisticsComponentFloat, &StatisticsComponentFloat::Clock1Tick>(this));
 
     /////////////////////////////////////////
     // Create the Statistics objects

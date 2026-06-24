@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -19,7 +19,7 @@
 #include "sst/core/linkPair.h"
 #include "sst/core/pollingLinkQueue.h"
 #include "sst/core/profile/eventHandlerProfileTool.h"
-#include "sst/core/simulation_impl.h"
+#include "sst/core/simulation.h"
 #include "sst/core/ssthandler.h"
 #include "sst/core/sync/syncManager.h"
 #include "sst/core/sync/syncQueue.h"
@@ -33,6 +33,8 @@
 
 namespace SST {
 
+bool Link::is_restart_same_parallelism = false;
+
 void
 SST::Core::Serialization::serialize_impl<Link*>::serialize_events(
     serializer& ser, uintptr_t delivery_info, ActivityQueue* queue)
@@ -40,7 +42,7 @@ SST::Core::Serialization::serialize_impl<Link*>::serialize_events(
     if ( ser.mode() == serializer::SIZER || ser.mode() == serializer::PACK ) {
         // Look up all the events for the specified handler
         std::pair<::SST::pvt::TimeVortexSort::iterator, ::SST::pvt::TimeVortexSort::iterator> activites =
-            Simulation_impl::getSimulation()->getEventsForHandler(delivery_info);
+            Simulation::getSimulation()->getEventsForHandler(delivery_info);
 
         size_t count = std::distance(activites.first, activites.second);
         SST_SER(count);
@@ -53,7 +55,7 @@ SST::Core::Serialization::serialize_impl<Link*>::serialize_events(
         SST_SER(count);
 
         for ( size_t i = 0; i < count; ++i ) {
-            Event* ev;
+            Event* ev = nullptr;
             SST_SER(ev);
             // Insert into the specified ActivityQueue after updating
             // delvery_info
@@ -78,9 +80,9 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
     int16_t SYNC = 3;
 
     // Need a pointer to my simulation object
-    Simulation_impl* sim = Simulation_impl::getSimulation();
+    Simulation* sim = Simulation::getSimulation();
 
-    // In order to uniquely identify links on restart, we need to
+    // For restarts that use the same parallelism, we need to
     // track the rank of the link and its pair link.  For regular
     // links, they are the same, but for sync link pairs, the pair
     // link will be on a different rank.  For self links, this
@@ -109,54 +111,23 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
 
         SST_SER(type);
 
-        /*
-          Unique Identifiers
-
-          For non-selflinks, we need to be able to create a unique
-          identifier so we can connect the pairs on restart.  The
-          unique identifiers are created using the MPI rank and point
-          of the link cast as a uintptr_t.
-
-          For regular links, we only store the rank once since both
-          links in the pair are on the same rank.
-
-          For SYNC links, the local link only knows the remote link by
-          it's pair link, so we will use that pointer for the unique
-          ID.
-
-          For self links, no rank info is stored since we don't need
-          to create a unique ID
-        */
         if ( type == SYNC || type == REG ) {
             SST_SER(my_rank);
 
-            uintptr_t ptr;
-            if ( type == SYNC )
-                ptr = reinterpret_cast<uintptr_t>(s->pair_link);
-            else
-                ptr = reinterpret_cast<uintptr_t>(s);
-
-            SST_SER(ptr);
-
             if ( type == SYNC ) {
-                // The unique ID for the remote links is constructed from
-                // the rank of the remote pair link and its pointer on
-                // that rank.  The remote pointer is stored in
-                // delivery_info and we can get the remote rank from the
-                // sync queue.
+                // Get rank for pair
                 SyncQueue* q = dynamic_cast<SyncQueue*>(s->send_queue);
                 pair_rank    = q->getToRank();
                 SST_SER(pair_rank);
-                SST_SER(s->delivery_info);
-            }
-            else {
-                // Unique ID for my pair link is my rank and pair_link
-                // pointer.  Rank is already stored, just store pair
-                // pointer
-                uintptr_t pair_ptr = reinterpret_cast<uintptr_t>(s->pair_link);
-                SST_SER(pair_ptr);
             }
         } // if ( type == SYNC || type == REG )
+
+
+        // Serialize the ID for the Link
+        if ( !s->has_tool_list )
+            SST_SER(s->id);
+        else
+            SST_SER((*s->attached_tools)[0].second);
 
         /*
           Store the metadata for this link
@@ -217,24 +188,31 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
 
         // Determine how many serializable tools there are
         Link::ToolList tools;
-        if ( s->attached_tools ) {
-            for ( auto x : *s->attached_tools ) {
-                if ( dynamic_cast<SST::Core::Serialization::serializable*>(x.first) ) {
-                    tools.push_back(x);
+
+        if ( s->has_tool_list ) {
+            for ( auto x = ++s->attached_tools->begin(); x != s->attached_tools->end(); ++x ) {
+                if ( dynamic_cast<SST::Core::Serialization::serializable*>(x->first) ) {
+                    tools.push_back(*x);
                 }
             }
         }
         size_t tool_count = tools.size();
-        SST_SER(tool_count);
-        if ( tool_count > 0 ) {
-            // Serialize each tool, then call
-            // serializeEventAttachPointKey() to serialize any data
-            // associated with the key
-            for ( auto x : tools ) {
-                SST::Core::Serialization::serializable* obj =
-                    dynamic_cast<SST::Core::Serialization::serializable*>(x.first);
-                SST_SER(obj);
-                x.first->serializeEventAttachPointKey(ser, x.second);
+
+        // Need to determine if we'll have any tools attached on restart. We only have tools when tool_count > 0
+        bool restart_tools = (tool_count > 0);
+        SST_SER(restart_tools);
+
+        if ( restart_tools ) {
+            SST_SER(tool_count);
+            if ( tool_count > 0 ) {
+                // Serialize each tool, then call serializeEventAttachPointKey() to serialize any data associated with
+                // the key
+                for ( auto x : tools ) {
+                    SST::Core::Serialization::serializable* obj =
+                        dynamic_cast<SST::Core::Serialization::serializable*>(x.first);
+                    SST_SER(obj);
+                    x.first->serializeEventAttachPointKey(ser, x.second);
+                }
             }
         }
 
@@ -259,41 +237,34 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
           is a sync link or a regular link with the potentially new
           repartioning on restart.
 
-          We do this by querying the Simulation_impl object to see if
+          We do this by querying the Simulation object to see if
           the pair link is on the same partition or not.  If it is, it
           is a regular link, otherwise it is part of a sync link pair.
         */
         bool is_orig_sync = (type == 3);
 
-        /*
-          Unique identifiers
-
-          Get the ranks and tags for this link and its pair link
-        */
         RankInfo my_restart_rank   = sim->getRank();
         RankInfo pair_restart_rank = my_restart_rank;
 
-        uintptr_t my_tag;
-        uintptr_t pair_tag;
 
         if ( type == SYNC || type == REG ) {
             SST_SER(my_rank);
-            SST_SER(my_tag);
 
             if ( type == SYNC )
                 SST_SER(pair_rank);
             else
                 pair_rank = my_rank;
-
-            SST_SER(pair_tag);
         }
 
+
+        LinkId_t link_id;
+        SST_SER(link_id);
 
         /*
           Determine current sync state
         */
         if ( type != SELF ) {
-            pair_restart_rank = sim->getRankForLinkOnRestart(pair_rank, pair_tag);
+            pair_restart_rank = sim->getRankForLinkOnRestart(pair_rank, link_id);
 
             // If pair_restart_rank.rank == UNASSIGNED, then we have
             // the same paritioning as the checkpoint and the ranks
@@ -301,7 +272,9 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
             if ( pair_restart_rank.rank == RankInfo::UNASSIGNED ) pair_restart_rank = pair_rank;
         }
 
-        bool is_restart_sync = (my_restart_rank != pair_restart_rank);
+        // Need to know if this link is a sync link or not.  We can only do this if the restart uses the exact
+        // rank/thread counts as the checkpoint.  This info is stored in Link::is_restart_same_parallelism
+        bool is_restart_sync = (Link::is_restart_same_parallelism && my_restart_rank != pair_restart_rank);
 
         /*
           Create or get link from tracker
@@ -315,14 +288,12 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
             ser.unpacker().report_new_pointer(reinterpret_cast<uintptr_t>(s));
         }
         else {
-            auto&                     link_tracker   = sim->link_restart_tracking;
-            std::pair<int, uintptr_t> my_unique_id   = std::make_pair(my_rank.rank, my_tag);
-            std::pair<int, uintptr_t> pair_unique_id = std::make_pair(pair_rank.rank, pair_tag);
+            auto& link_tracker = sim->link_restart_tracking;
 
-            if ( !is_restart_sync && link_tracker.count(my_unique_id) ) {
+            if ( !is_restart_sync && link_tracker.count(link_id) ) {
                 // Get my link and erase it from the map
-                s = link_tracker[my_unique_id];
-                link_tracker.erase(my_unique_id);
+                s = link_tracker[link_id];
+                link_tracker.erase(link_id);
             }
             else {
                 // Create a link pair and set s to the left link
@@ -335,9 +306,11 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
                 s->pair_link->setLatency(0);
 
                 // Put my pair link in the tracking map
-                link_tracker[pair_unique_id] = s->pair_link;
+                link_tracker[link_id] = s->pair_link;
             }
         }
+
+        s->id = link_id;
 
         /*
           Get the metadata for the link
@@ -370,7 +343,7 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
             uintptr_t delivery_info;
             SST_SER(delivery_info);
 
-            Event::HandlerBase* handler;
+            Event::HandlerBase* handler = nullptr;
             SST_SER(handler);
             s->pair_link->delivery_info = reinterpret_cast<uintptr_t>(handler);
 
@@ -401,13 +374,20 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
             s->pair_link->latency += latency;
         }
 
-        /*
-          Restore attached tools
-        */
-        size_t tool_count;
-        SST_SER(tool_count);
-        if ( tool_count > 0 ) {
-            s->attached_tools = new Link::ToolList();
+        SST_SER(s->has_tool_list);
+
+        if ( s->has_tool_list ) {
+            /*
+              Restore attached tools
+            */
+            size_t tool_count;
+            SST_SER(tool_count);
+
+            // If has_tool_list is true, then tool_count is greater than 0
+            Link::ToolList* tools = new Link::ToolList();
+            tools->emplace_back(nullptr, s->id);
+            s->attached_tools = tools;
+            s->has_tool_list  = true;
             for ( size_t i = 0; i < tool_count; ++i ) {
                 SST::Core::Serialization::serializable* tool;
                 uintptr_t                               key;
@@ -417,9 +397,7 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
                 s->attached_tools->emplace_back(ap, key);
             }
         }
-        else {
-            s->attached_tools = nullptr;
-        }
+
 
         /*
           Deserialize the events targetting this link
@@ -440,17 +418,15 @@ SST::Core::Serialization::serialize_impl<Link*>::operator()(Link*& s, serializer
             s->pair_link->tag  = s->tag;
 
             s->pair_link->defaultTimeBase = 1;
+            s->pair_link->id              = s->getId();
 
-            // Need to register with the SyncManager, but first
-            // need to create a unique name
-            std::string    uname = s->createUniqueGlobalLinkName(my_rank, my_tag, pair_rank, pair_tag);
-            ActivityQueue* sync_q =
-                sim->syncManager->registerLink(pair_restart_rank, my_restart_rank, uname, s->pair_link);
-            s->send_queue = sync_q;
+            // Need to register with the SyncManager
+            ActivityQueue* sync_q = sim->syncManager->registerLink(pair_restart_rank, my_restart_rank, s->pair_link);
+            s->send_queue         = sync_q;
         }
     } break;
     case serializer::MAP:
-        // TODO: Implement Link mapping mode
+        // No current plans to make Links mappable
         break;
     }
 }
@@ -477,17 +453,17 @@ private:
 };
 
 
-Link::Link(LinkId_t tag) :
+Link::Link(LinkId_t id) :
     send_queue(nullptr),
     delivery_info(0),
     defaultTimeBase(0),
     latency(1),
     pair_link(nullptr),
-    current_time(Simulation_impl::getSimulation()->currentSimCycle),
+    current_time(Simulation::getSimulation()->currentSimCycle),
     type(UNINITIALIZED),
     mode(INIT),
-    tag(tag),
-    attached_tools(nullptr)
+    tag(0),
+    id(id)
 {}
 
 Link::Link() :
@@ -496,11 +472,10 @@ Link::Link() :
     defaultTimeBase(0),
     latency(1),
     pair_link(nullptr),
-    current_time(Simulation_impl::getSimulation()->currentSimCycle),
+    current_time(Simulation::getSimulation()->currentSimCycle),
     type(UNINITIALIZED),
     mode(INIT),
-    tag(type_max<uint32_t>),
-    attached_tools(nullptr)
+    tag(bit_util::type_max<uint32_t>)
 {}
 
 Link::~Link()
@@ -514,7 +489,7 @@ Link::~Link()
         if ( SYNC == pair_link->type ) delete pair_link;
     }
 
-    if ( attached_tools ) delete attached_tools;
+    if ( has_tool_list ) delete attached_tools;
 }
 
 void
@@ -534,7 +509,7 @@ Link::finalizeConfiguration()
     }
 
     if ( HANDLER == type ) {
-        pair_link->send_queue = Simulation_impl::getSimulation()->getTimeVortex();
+        pair_link->send_queue = Simulation::getSimulation()->getTimeVortex();
     }
     else if ( POLL == type ) {
         pair_link->send_queue = new PollingLinkQueue();
@@ -583,7 +558,7 @@ Link::setLatency(Cycle_t lat)
 void
 Link::addSendLatency(int cycles, const std::string& timebase)
 {
-    SimTime_t tb = Simulation_impl::getSimulation()->getTimeLord()->getSimCycles(timebase, "addOutputLatency");
+    SimTime_t tb = Simulation::getSimulation()->getTimeLord()->getSimCycles(timebase, "addOutputLatency");
     latency += (cycles * tb);
 }
 
@@ -594,15 +569,9 @@ Link::addSendLatency(SimTime_t cycles, TimeConverter timebase)
 }
 
 void
-Link::addSendLatency(SimTime_t cycles, TimeConverter* timebase)
-{
-    latency += timebase->convertToCoreTime(cycles);
-}
-
-void
 Link::addRecvLatency(int cycles, const std::string& timebase)
 {
-    SimTime_t tb = Simulation_impl::getSimulation()->getTimeLord()->getSimCycles(timebase, "addOutputLatency");
+    SimTime_t tb = Simulation::getSimulation()->getTimeLord()->getSimCycles(timebase, "addOutputLatency");
     pair_link->latency += (cycles * tb);
 }
 
@@ -613,16 +582,10 @@ Link::addRecvLatency(SimTime_t cycles, TimeConverter timebase)
 }
 
 void
-Link::addRecvLatency(SimTime_t cycles, TimeConverter* timebase)
-{
-    pair_link->latency += timebase->convertToCoreTime(cycles);
-}
-
-void
 Link::setFunctor(Event::HandlerBase* functor)
 {
     if ( UNLIKELY(type == POLL) ) {
-        Simulation_impl::getSimulation()->getSimulationOutput().fatal(
+        Simulation::getSimulation()->getSimulationOutput().fatal(
             CALL_INFO, 1, "Cannot call setFunctor on a Polling Link\n");
     }
 
@@ -634,7 +597,7 @@ void
 Link::replaceFunctor(Event::HandlerBase* functor)
 {
     if ( UNLIKELY(type == POLL) ) {
-        Simulation_impl::getSimulation()->getSimulationOutput().fatal(
+        Simulation::getSimulation()->getSimulationOutput().fatal(
             CALL_INFO, 1, "Cannot call replaceFunctor on a Polling Link\n");
     }
 
@@ -661,12 +624,12 @@ Link::send_impl(SimTime_t delay, Event* event)
 {
     if ( RUN != mode ) {
         if ( INIT == mode ) {
-            Simulation_impl::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1,
+            Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1,
                 "ERROR: Trying to send or recv from link during initialization.  Send and Recv cannot be called before "
                 "setup.\n");
         }
         else if ( COMPLETE == mode ) {
-            Simulation_impl::getSimulation()->getSimulationOutput().fatal(
+            Simulation::getSimulation()->getSimulationOutput().fatal(
                 CALL_INFO, 1, "ERROR: Trying to call send or recv during complete phase.");
         }
     }
@@ -683,9 +646,10 @@ Link::send_impl(SimTime_t delay, Event* event)
     event->addRecvComponent(pair_link->comp, pair_link->ctype, pair_link->port);
 #endif
 
-    if ( attached_tools ) {
-        for ( auto& x : *attached_tools ) {
-            x.first->eventSent(x.second, event);
+    if ( has_tool_list ) {
+        // First entry just holds the Link id, so we can skip it
+        for ( auto x = ++attached_tools->begin(); x != attached_tools->end(); ++x ) {
+            x->first->eventSent(x->second, event);
             // Check to see if the event was deleted.  If so, return.
             if ( nullptr == event ) return;
         }
@@ -699,12 +663,12 @@ Link::recv()
 {
     // Check to make sure this is a polling link
     if ( UNLIKELY(type != POLL) ) {
-        Simulation_impl::getSimulation()->getSimulationOutput().fatal(
+        Simulation::getSimulation()->getSimulationOutput().fatal(
             CALL_INFO, 1, "Cannot call recv on a Link with an event handler installed (non-polling link.\n");
     }
 
-    Event*           event      = nullptr;
-    Simulation_impl* simulation = Simulation_impl::getSimulation();
+    Event*      event      = nullptr;
+    Simulation* simulation = Simulation::getSimulation();
 
     if ( !pair_link->send_queue->empty() ) {
         Activity* activity = pair_link->send_queue->front();
@@ -720,15 +684,15 @@ void
 Link::sendUntimedData(Event* data)
 {
     if ( RUN == mode ) {
-        Simulation_impl::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1,
+        Simulation::getSimulation()->getSimulationOutput().fatal(CALL_INFO, 1,
             "ERROR: Trying to call sendUntimedData/sendInitData or recvUntimedData/recvInitData during the run phase.");
     }
 
     if ( send_queue == nullptr ) {
         send_queue = new InitQueue();
     }
-    Simulation_impl::getSimulation()->untimed_msg_count++;
-    data->setDeliveryTime(Simulation_impl::getSimulation()->untimed_phase + 1);
+    Simulation::getSimulation()->untimed_msg_count++;
+    data->setDeliveryTime(Simulation::getSimulation()->untimed_phase + 1);
     data->setDeliveryInfo(tag, delivery_info);
 
     send_queue->insert(data);
@@ -757,7 +721,7 @@ Link::recvUntimedData()
     Event* event = nullptr;
     if ( !pair_link->send_queue->empty() ) {
         Activity* activity = pair_link->send_queue->front();
-        if ( activity->getDeliveryTime() <= Simulation_impl::getSimulation()->untimed_phase ) {
+        if ( activity->getDeliveryTime() <= Simulation::getSimulation()->untimed_phase ) {
             event = static_cast<Event*>(activity);
             pair_link->send_queue->pop();
         }
@@ -766,33 +730,17 @@ Link::recvUntimedData()
 }
 
 void
-Link::setDefaultTimeBase(TimeConverter* tc)
-{
-    if ( tc == nullptr )
-        defaultTimeBase = 0;
-    else
-        defaultTimeBase = tc->getFactor();
-}
-
-void
 Link::setDefaultTimeBase(TimeConverter tc)
 {
     defaultTimeBase = tc.getFactor();
 }
 
-TimeConverter*
+TimeConverter
 Link::getDefaultTimeBase()
 {
-    if ( defaultTimeBase == 0 ) return nullptr;
-    return Simulation_impl::getSimulation()->getTimeLord()->getTimeConverter(defaultTimeBase);
+    return Simulation::getSimulation()->getTimeLord()->getTimeConverter(defaultTimeBase);
 }
 
-const TimeConverter*
-Link::getDefaultTimeBase() const
-{
-    if ( defaultTimeBase == 0 ) return nullptr;
-    return Simulation_impl::getSimulation()->getTimeLord()->getTimeConverter(defaultTimeBase);
-}
 
 std::string
 Link::createUniqueGlobalLinkName(RankInfo local_rank, uintptr_t local_ptr, RankInfo remote_rank, uintptr_t remote_ptr)
@@ -840,17 +788,23 @@ Link::createUniqueGlobalLinkName(RankInfo local_rank, uintptr_t local_ptr, RankI
 void
 Link::attachTool(AttachPoint* tool, const AttachPointMetaData& mdata)
 {
-    if ( !attached_tools ) attached_tools = new ToolList();
+    if ( !has_tool_list ) {
+        auto tools = new ToolList();
+        tools->emplace_back(nullptr, id);
+        attached_tools = tools;
+        has_tool_list  = true;
+    }
     auto key = tool->registerLinkAttachTool(mdata);
-    attached_tools->push_back(std::make_pair(tool, key));
+    attached_tools->emplace_back(tool, key);
 }
 
 void
 Link::detachTool(AttachPoint* tool)
 {
-    if ( !attached_tools ) return;
+    if ( !has_tool_list ) return;
 
-    for ( auto x = attached_tools->begin(); x != attached_tools->end(); ++x ) {
+    // First entry just holds the Link id, so we can skip it
+    for ( auto x = ++attached_tools->begin(); x != attached_tools->end(); ++x ) {
         if ( x->first == tool ) {
             attached_tools->erase(x);
             break;

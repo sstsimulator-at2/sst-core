@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -15,13 +15,16 @@
 #include "sst/core/action.h"
 #include "sst/core/link.h"
 #include "sst/core/rankInfo.h"
+#include "sst/core/simulation.h"
 #include "sst/core/sst_types.h"
 #include "sst/core/threadsafe.h"
 
+#include <atomic>
 #include <cstdint>
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace SST {
@@ -29,15 +32,15 @@ namespace SST {
 class CheckpointAction;
 class Exit;
 class RealTimeManager;
-class Simulation_impl;
+class Simulation;
 // class SyncBase;
 class ThreadSyncQueue;
 class TimeConverter;
 
-class SyncProfileToolList;
 namespace Profile {
 class SyncProfileTool;
-}
+class SyncProfileToolList;
+} // namespace Profile
 
 class RankSync
 {
@@ -51,9 +54,9 @@ public:
     virtual ~RankSync() {}
 
     /** Register a Link which this Sync Object is responsible for */
-    virtual ActivityQueue* registerLink(
-        const RankInfo& to_rank, const RankInfo& from_rank, const std::string& name, Link* link) = 0;
-    void exchangeLinkInfo(uint32_t my_rank);
+    virtual ActivityQueue* registerLink(const RankInfo& to_rank, const RankInfo& from_rank, Link* link) = 0;
+    void                   exchangeLinkInfo(uint32_t my_rank);
+    SimTime_t              findSyncInterval(uint32_t my_rank);
 
     virtual void execute(int thread)                                              = 0;
     virtual void exchangeLinkUntimedData(int thread, std::atomic<int>& msg_count) = 0;
@@ -65,20 +68,43 @@ public:
     /** Return exchanged signals after sync */
     virtual bool getSignals(int& end, int& usr, int& alrm) = 0;
 
+    /** Set interactive flags to exchange during sync */
+    virtual void setShutdownFlags(bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode)                    = 0;
+    virtual void setCkptFlag(bool generate_ckpt)                                                                    = 0;
+    virtual void setFlags(bool enter_interactive, bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode)    = 0;
+    /** Return exchanged interactive flags after sync */
+    virtual void getShutdownFlags(bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode)                  = 0;
+    virtual void getCkptFlag(bool& generate_ckpt)                                                                   = 0;
+    virtual void getFlags(bool& enter_interactive, bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode) = 0;
+    /** Clear interactive flags before next run */
+    virtual void clearFlags()                                                                                       = 0;
+
     virtual SimTime_t getNextSyncTime() { return nextSyncTime; }
 
     virtual void setRestartTime(SimTime_t time) { nextSyncTime = time; }
 
-    TimeConverter getMaxPeriod() { return max_period; }
+    void      setMaxPeriod(SimTime_t period) { max_period = period; }
+    SimTime_t getMaxPeriod() { return max_period; }
 
     virtual uint64_t getDataSize() const = 0;
 
+    virtual void setProfileToolList(Profile::SyncProfileToolList* UNUSED(profile_list)) {}
+
 protected:
     SimTime_t      nextSyncTime;
-    TimeConverter  max_period;
+    SimTime_t      max_period;
     const RankInfo num_ranks_;
 
-    std::vector<std::map<std::string, uintptr_t>> link_maps;
+    /**
+       This uses uint64_t because it is used for two different types of data at different times:
+
+       1 - LinkId_t when doing the Link pointer exchange
+
+       2 - SimTime_t when doing the Sync interval optimization
+
+       In both cases, the uintptr_t is a pointer to a Link
+    */
+    std::vector<std::vector<std::pair<uint64_t, uintptr_t>>> link_maps;
 
     void finalizeConfiguration(Link* link) { link->finalizeConfiguration(); }
 
@@ -109,19 +135,32 @@ public:
     /** Return exchanged signals after sync */
     virtual bool getSignals(int& end, int& usr, int& alrm) = 0;
 
+    /** Set interactive flags to exchange during sync */
+    virtual void setShutdownFlags(bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode)                    = 0;
+    virtual void setFlags(bool enter_interactive, bool enter_shutdown, Simulation::ShutdownMode_t shutdown_mode)    = 0;
+    /** Return exchanged interactive flags after sync */
+    virtual void getShutdownFlags(bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode)                  = 0;
+    virtual void getFlags(bool& enter_interactive, bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode) = 0;
+    /** Clear interactive flags before next run */
+    virtual void clearFlags()                                                                                       = 0;
+
     virtual SimTime_t getNextSyncTime() { return nextSyncTime; }
     virtual void      setRestartTime(SimTime_t time) { nextSyncTime = time; }
 
-    void          setMaxPeriod(TimeConverter* period) { max_period = period; }
-    TimeConverter getMaxPeriod() { return max_period; }
+    void      setMaxPeriod(SimTime_t period) { max_period = period; }
+    SimTime_t getMaxPeriod() { return max_period; }
 
     /** Register a Link which this Sync Object is responsible for */
-    virtual void           registerLink(const std::string& name, Link* link)                = 0;
-    virtual ActivityQueue* registerRemoteLink(int tid, const std::string& name, Link* link) = 0;
+    virtual void           registerLink(Link* link)                = 0;
+    virtual ActivityQueue* registerRemoteLink(int tid, Link* link) = 0;
+
+    virtual SimTime_t findSyncInterval() { return bit_util::type_max<SimTime_t>; }
+
+    static SimTime_t updateMinimumLatency(SimTime_t lat = bit_util::type_max<SimTime_t>);
 
 protected:
-    SimTime_t     nextSyncTime;
-    TimeConverter max_period;
+    SimTime_t nextSyncTime;
+    SimTime_t max_period;
 
     void finalizeConfiguration(Link* link) { link->finalizeConfiguration(); }
 
@@ -132,6 +171,21 @@ protected:
     inline void setLinkDeliveryInfo(Link* link, uintptr_t info) { link->pair_link->setDeliveryInfo(info); }
 
     inline Link* getDeliveryLink(Event* ev) { return ev->getDeliveryLink(); }
+
+    /**
+       Get the latency on the link in units of core atomic time base
+    */
+    SimTime_t getLatency(Link* link) { return link->latency; }
+
+    /**
+       Get the delivery_info for the link
+    */
+    uintptr_t getDeliveryInfo(Link* link) { return link->delivery_info; }
+
+    /**
+       Get the pair_link
+    */
+    Link* getPairLink(Link* link) { return link->pair_link; }
 };
 
 class SyncManager : public Action
@@ -143,10 +197,14 @@ public:
     virtual ~SyncManager() = default;
 
     /** Register a Link which this Sync Object is responsible for */
-    ActivityQueue* registerLink(
-        const RankInfo& to_rank, const RankInfo& from_rank, const std::string& name, Link* link);
-    void exchangeLinkInfo();
-    void execute() override;
+    ActivityQueue* registerLink(const RankInfo& to_rank, const RankInfo& from_rank, Link* link);
+    void           exchangeLinkInfo();
+    void           handleShutdown();
+    void           handleInteractiveConsole();
+    SimTime_t      findRankSyncInterval();
+    SimTime_t      findThreadSyncInterval();
+    void           updateMinPart();
+    void           execute() override;
 
     /** Cause an exchange of Initialization Data to occur */
     void exchangeLinkUntimedData(std::atomic<int>& msg_count);
@@ -164,6 +222,11 @@ public:
         threadSync_->setRestartTime(time);
     }
 
+    std::pair<SimTime_t, SimTime_t> getSyncIntervals()
+    {
+        return std::make_pair(rankSync_->getMaxPeriod(), threadSync_->getMaxPeriod());
+    }
+
     void addProfileTool(Profile::SyncProfileTool* tool);
 
     NotSerializable(SST::SyncManager)
@@ -174,25 +237,30 @@ private:
 
     RankInfo                         rank_;
     RankInfo                         num_ranks_;
-    static Core::ThreadSafe::Barrier RankExecBarrier_[5];
+    static Core::ThreadSafe::Barrier RankExecBarrier_[6];
     static Core::ThreadSafe::Barrier LinkUntimedBarrier_[3];
 
     static RankSync* rankSync_;
     static SimTime_t next_rankSync_;
     ThreadSync*      threadSync_;
     Exit*            exit_;
-    Simulation_impl* sim_;
+    Simulation*      sim_;
 
     sync_type_t next_sync_type_;
     SimTime_t   min_part_;
 
-    RealTimeManager*  real_time_;
-    CheckpointAction* checkpoint_;
+    RealTimeManager*                 real_time_;
+    CheckpointAction*                checkpoint_;
+    static std::atomic<unsigned>     ckpt_generate_;
+    static Core::ThreadSafe::Barrier ic_barrier_;
 
-    SyncProfileToolList* profile_tools_ = nullptr;
+    Profile::SyncProfileToolList* profile_tools_ = nullptr;
 
     void computeNextInsert(SimTime_t next_checkpoint_time = MAX_SIMTIME_T);
     void setupSyncObjects();
+    void getSimShutdownFlags(bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode);
+    void getSimFlags(
+        bool& enter_interactive, bool& enter_shutdown, Simulation::ShutdownMode_t& shutdown_mode, bool& generate_ckpt);
 };
 
 } // namespace SST

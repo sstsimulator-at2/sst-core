@@ -1,8 +1,8 @@
-// Copyright 2009-2025 NTESS. Under the terms
+// Copyright 2009-2026 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2025, NTESS
+// Copyright (c) 2009-2026, NTESS
 // All rights reserved.
 //
 // This file is part of the SST software package. For license
@@ -29,7 +29,7 @@ OverheadMeasure::OverheadMeasure(ComponentId_t id, Params& params) :
     while ( !done ) {
         std::string port_name("left_");
         port_name     = port_name + std::to_string(ports_);
-        auto* handler = new Event::Handler2<OverheadMeasure, &OverheadMeasure::handleEvent, int>(this, ports_);
+        auto* handler = new Event::Handler<OverheadMeasure, &OverheadMeasure::handleEvent, int>(this, ports_);
         Link* link    = configureLink(port_name, "1ns", handler);
         ++ports_;
         if ( !link ) {
@@ -41,7 +41,7 @@ OverheadMeasure::OverheadMeasure(ComponentId_t id, Params& params) :
     while ( !done ) {
         std::string port_name("right_");
         port_name     = port_name + std::to_string(ports_);
-        auto* handler = new Event::Handler2<OverheadMeasure, &OverheadMeasure::handleEvent, int>(this, ports_);
+        auto* handler = new Event::Handler<OverheadMeasure, &OverheadMeasure::handleEvent, int>(this, ports_);
         Link* link    = configureLink(port_name, "1ns", handler);
         ++ports_;
         if ( !link ) {
@@ -51,7 +51,7 @@ OverheadMeasure::OverheadMeasure(ComponentId_t id, Params& params) :
     }
 
     // set our clock
-    registerClock("100 MHz", new Clock::Handler2<OverheadMeasure, &OverheadMeasure::clockTic>(this));
+    registerClock("100 MHz", new Clock::Handler<OverheadMeasure, &OverheadMeasure::clockTic>(this));
 
     registerAsPrimaryComponent();
     primaryComponentDoNotEndSim();
