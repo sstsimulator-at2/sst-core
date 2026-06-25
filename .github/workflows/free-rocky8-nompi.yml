@@ -18,6 +18,18 @@ jobs:
       image: rockylinux/rockylinux:8.10@sha256:e8a49c5403b687db05d4d67333fa45808fbe74f36e683cec7abb1f7d0f2338c6
     steps:
 
+      - name: Clean up disk space
+        run: |
+          df -h
+          rm -rf /__t/*
+          rm -rf /host/usr/lib/jvm
+          rm -rf /host/usr/local/.ghcup
+          rm -rf /host/usr/local/lib/android
+          rm -rf /host/usr/local/share/powershell
+          rm -rf /host/usr/share/dotnet
+          rm -rf /host/usr/share/swift
+          df -h
+
       - name: Install git
         run: |
           dnf -y upgrade

@@ -18,6 +18,18 @@ jobs:
       image: archlinux:base-devel-20260621.0.546891@sha256:cf028aee853281ba9b3cba41b49f7ad4836275256226938ab619e0f05b1e6105
     steps:
 
+      - name: Clean up disk space
+        run: |
+          df -h
+          rm -rf /__t/*
+          rm -rf /host/usr/lib/jvm
+          rm -rf /host/usr/local/.ghcup
+          rm -rf /host/usr/local/lib/android
+          rm -rf /host/usr/local/share/powershell
+          rm -rf /host/usr/share/dotnet
+          rm -rf /host/usr/share/swift
+          df -h
+
       - name: Install git
         run: |
           pacman -Sy --noconfirm
