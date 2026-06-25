@@ -30,6 +30,7 @@ elif command -v dnf >/dev/null 2>&1; then
         ncurses-devel \
         openmpi \
         python39-devel \
+        wget \
         zlib-devel
     dnf -y config-manager --set-enabled powertools
     dnf -y install epel-release
