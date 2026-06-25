@@ -58,7 +58,7 @@ repos:
         additional_dependencies:
           - "github.com/wasilibs/go-shellcheck/cmd/shellcheck@v0.11.1"
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.14.2"
+    rev: "v0.15.20"
     hooks:
       - id: ruff-check
   - repo: https://github.com/pre-commit/mirrors-mypy
