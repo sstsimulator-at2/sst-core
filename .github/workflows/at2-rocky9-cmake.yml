@@ -42,7 +42,7 @@ jobs:
           create-symlink: false
           key: >-
             ccache-${{ github.job }}
-          max-size: "2GB"
+          max-size: "5GB"
           verbose: 2
 
       - name: Set environment variables
