@@ -52,7 +52,7 @@ repos:
   #             scripts/cmake-format-test.sh
   #         )
   - repo: https://github.com/rhysd/actionlint
-    rev: "v1.7.8"
+    rev: "v1.7.12"
     hooks:
       - id: actionlint
         additional_dependencies:
