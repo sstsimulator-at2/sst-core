@@ -21,6 +21,7 @@ if command -v brew >/dev/null 2>&1; then
 elif command -v dnf >/dev/null 2>&1; then
     dnf -y upgrade
     dnf -y install \
+        file \
         gcc-c++ \
         libtool \
         libtool-ltdl-devel \
