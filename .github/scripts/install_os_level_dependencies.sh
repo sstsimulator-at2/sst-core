@@ -6,7 +6,7 @@
 set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
-if command -v brew; then
+if command -v brew >/dev/null 2>&1; then
     brew install \
          autoconf \
          automake \
@@ -18,7 +18,7 @@ if command -v brew; then
          open-mpi \
          pygments
     python -m pip install blessings
-elif command -v dnf; then
+elif command -v dnf >/dev/null 2>&1; then
     dnf -y upgrade
     dnf -y install \
         gcc-c++ \
@@ -33,7 +33,7 @@ elif command -v dnf; then
             echo "/usr/lib64/openmpi/bin" >> "${GITHUB_PATH}"
         fi
     fi
-elif command -v apt-get; then
+elif command -v apt-get >/dev/null 2>&1; then
     apt-get -y update
     apt-get -y install \
             autoconf \
