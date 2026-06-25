@@ -48,6 +48,7 @@ elif command -v pacman >/dev/null 2>&1; then
     pacman -S --noconfirm \
            autoconf \
            automake \
+           ccache \
            gcc \
            make \
            ncurses \
