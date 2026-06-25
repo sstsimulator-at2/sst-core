@@ -36,7 +36,6 @@ mkdir -p "${dir_build}"
 pushd "${dir_build}"
 
 INSTALL="$(command -v install) -p" "${dir_src}"/configure \
-       --disable-dependency-tracking \
        --disable-mpi \
        --prefix="${dir_install}"
 
