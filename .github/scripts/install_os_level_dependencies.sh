@@ -10,6 +10,7 @@ if command -v brew; then
     brew install \
          autoconf \
          automake \
+         ccache \
          coreutils \
          doxygen \
          libtool \
