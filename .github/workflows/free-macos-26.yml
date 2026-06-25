@@ -35,7 +35,7 @@ jobs:
           sst-core/.github/scripts/install_os_level_dependencies.sh
 
       - name: Install and configure ccache
-        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2.18
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03  # v1.2.23
         with:
           append-timestamp: false
           create-symlink: true
