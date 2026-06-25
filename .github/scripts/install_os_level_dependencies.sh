@@ -28,7 +28,8 @@ elif command -v dnf >/dev/null 2>&1; then
         make \
         ncurses-devel \
         openmpi \
-        python39-devel
+        python39-devel \
+        zlib-devel
     if [[ -f "${GITHUB_PATH}" ]]; then
         if [[ -d "/usr/lib64/openmpi/bin" ]]; then
             echo "/usr/lib64/openmpi/bin" >> "${GITHUB_PATH}"
