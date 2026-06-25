@@ -41,13 +41,6 @@ jobs:
         run: |
           sst-core/.github/scripts/install_os_level_dependencies.sh
 
-      - name: Install ccache
-        run: |
-          dnf -y install 'dnf-command(config-manager)'
-          dnf -y config-manager --set-enabled powertools
-          dnf -y install epel-release
-          dnf -y install ccache
-
       - name: Configure ccache
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2.18
         with:

@@ -21,6 +21,7 @@ if command -v brew >/dev/null 2>&1; then
 elif command -v dnf >/dev/null 2>&1; then
     dnf -y upgrade
     dnf -y install \
+        'dnf-command(config-manager)' \
         file \
         gcc-c++ \
         libtool \
@@ -30,6 +31,9 @@ elif command -v dnf >/dev/null 2>&1; then
         openmpi \
         python39-devel \
         zlib-devel
+    dnf -y config-manager --set-enabled powertools
+    dnf -y install epel-release
+    dnf -y install ccache
     if [[ -f "${GITHUB_PATH}" ]]; then
         if [[ -d "/usr/lib64/openmpi/bin" ]]; then
             echo "/usr/lib64/openmpi/bin" >> "${GITHUB_PATH}"
