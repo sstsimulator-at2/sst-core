@@ -71,10 +71,44 @@ clean_suffix() {
 #     fi
 # fi
 
-bear_make_install() {
-    if command -v bear >& /dev/null; then
-        "$(command -v bear)" -- make install
+if [ -n "${CUDA_INSTALL_PATH}" ]; then
+    CUDA_TEXT="--with-cuda=${CUDA_INSTALL_PATH}"
+elif [ -n "${CUDA_HOME}" ]; then
+    export CUDA_INSTALL_PATH="${CUDA_HOME}"
+    CUDA_TEXT="--with-cuda=${CUDA_INSTALL_PATH}"
+else
+    # shellcheck disable=SC2034
+    CUDA_TEXT=""
+fi
+
+if [ -n "${GPGPUSIM_ROOT}" ]; then
+    GPGPUSIM_TEXT="--with-gpgpusim=${GPGPUSIM_ROOT}"
+else
+    # shellcheck disable=SC2034
+    GPGPUSIM_TEXT=""
+fi
+
+max_cpus() {
+    local max=${1:-16}
+    local cpu_count
+    cpu_count="$(nproc)"
+
+    if ((cpu_count > max)); then
+        echo "${max}"
     else
-        make install
+        echo "${cpu_count}"
     fi
+}
+
+bear_make() {
+    if command -v bear >&/dev/null; then
+        "$(command -v bear)" -- make -j"$(max_cpus)"
+    else
+        make -j"$(max_cpus)"
+    fi
+}
+
+bear_make_install() {
+    bear_make
+    make install -j"$(max_cpus)"
 }
