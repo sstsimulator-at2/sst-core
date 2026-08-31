@@ -46,7 +46,7 @@ jobs:
           pacman -S --noconfirm ccache
 
       - name: Configure ccache
-        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1  # v1.2.18
+        uses: hendrikmuhs/ccache-action@f09c25b45002a07be2955cbe52e8cee55643f89d  # v1.2.24
         with:
           append-timestamp: false
           create-symlink: true
