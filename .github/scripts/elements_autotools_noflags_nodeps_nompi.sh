@@ -37,7 +37,6 @@ pushd "${dir_build}"
 [ -n "${INTEL_PIN_DIRECTORY}" ] && PIN_TEXT="--with-pin=${INTEL_PIN_DIRECTORY}" || PIN_TEXT="--without-pin"
 INSTALL="$(command -v install) -p" "${dir_src}"/configure \
        "${PIN_TEXT}" \
-       --disable-dependency-tracking \
        --with-sst-core="${dir_core}" \
        --prefix="${dir_install}"
 
