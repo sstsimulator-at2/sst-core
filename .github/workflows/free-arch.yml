@@ -55,6 +55,11 @@ jobs:
           max-size: "2GB"
           verbose: 2
 
+      - name: Create unprivileged build user
+        run: |
+          useradd --home-dir /github/home --no-create-home --user-group sst-ci
+          chown --recursive sst-ci:sst-ci "${GITHUB_WORKSPACE}" /github/home
+
       - name: Set environment variables
         run: |
           MAKEFLAGS="-j$(nproc)"
@@ -62,11 +67,13 @@ jobs:
           echo "TERM=dumb" >> "${GITHUB_ENV}"
 
       - name: Compile core
+        shell: runuser --user sst-ci -- bash --noprofile --norc -eo pipefail {0}
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
           sst-core/.github/scripts/core_autotools_noflags_nodeps.sh gcc
 
       - name: Test core
+        shell: runuser --user sst-ci -- bash --noprofile --norc -eo pipefail {0}
         run: |
           install_autotools_noflags_nodeps_gcc/bin/sst-test-core
 
@@ -81,11 +88,13 @@ jobs:
         if: ${{ !cancelled() }}
 
       - name: Compile elements
+        shell: runuser --user sst-ci -- bash --noprofile --norc -eo pipefail {0}
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
           sst-core/.github/scripts/elements_autotools_noflags_nodeps.sh gcc
 
       - name: Test elements
+        shell: runuser --user sst-ci -- bash --noprofile --norc -eo pipefail {0}
         run: |
           install_autotools_noflags_nodeps_gcc/bin/sst-test-elements
 
