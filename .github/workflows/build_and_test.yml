@@ -30,24 +30,24 @@ jobs:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
-      ./.github/workflows/free-arch.yml
+      $/.github/workflows/free-arch.yml
   macos-15:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
-      ./.github/workflows/free-macos-15.yml
+      $/.github/workflows/free-macos-15.yml
   macos-26:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
-      ./.github/workflows/free-macos-26.yml
+      $/.github/workflows/free-macos-26.yml
   rocky8:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
-      ./.github/workflows/free-rocky8.yml
+      $/.github/workflows/free-rocky8.yml
   rocky8-nompi:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
-      ./.github/workflows/free-rocky8-nompi.yml
+      $/.github/workflows/free-rocky8-nompi.yml
