@@ -15,7 +15,7 @@ jobs:
     name: Build/test core ref and elements devel
     runs-on: ubuntu-24.04
     container:
-      image: rockylinux/rockylinux:8.10@sha256:e8a49c5403b687db05d4d67333fa45808fbe74f36e683cec7abb1f7d0f2338c6
+      image: rockylinux/rockylinux:10.2@sha256:827d37bc128288ccf160ee318bb3cb92d591164cb217e92f8bc61e3982ae1834
     steps:
 
       - name: Install git
