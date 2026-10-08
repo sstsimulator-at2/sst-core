@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: archlinux:base-devel-20260621.0.546891@sha256:cf028aee853281ba9b3cba41b49f7ad4836275256226938ab619e0f05b1e6105
+      # Docker's default 64 MiB /dev/shm is too small for the OpenMPI 5
+      # shared-memory segment, which then warns on stderr.
+      options: --shm-size=1g
     steps:
 
       - name: Install git
