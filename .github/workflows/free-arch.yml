@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: archlinux:base-devel-20260621.0.546891@sha256:cf028aee853281ba9b3cba41b49f7ad4836275256226938ab619e0f05b1e6105
+      # Docker's default 64 MiB /dev/shm is too small for the OpenMPI 5
+      # shared-memory segment, which then warns on stderr.
+      options: --shm-size=1g
     steps:
 
       - name: Install git
@@ -55,6 +58,10 @@ jobs:
           max-size: "2GB"
           verbose: 2
 
+      - name: Create unprivileged build user
+        run: |
+          sst-core/.github/scripts/run_as_ci_user.sh --setup
+
       - name: Set environment variables
         run: |
           MAKEFLAGS="-j$(nproc)"
@@ -62,11 +69,13 @@ jobs:
           echo "TERM=dumb" >> "${GITHUB_ENV}"
 
       - name: Compile core
+        shell: bash sst-core/.github/scripts/run_as_ci_user.sh {0}
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
           sst-core/.github/scripts/core_autotools_noflags_nodeps.sh gcc
 
       - name: Test core
+        shell: bash sst-core/.github/scripts/run_as_ci_user.sh {0}
         run: |
           install_autotools_noflags_nodeps_gcc/bin/sst-test-core
 
@@ -81,11 +90,13 @@ jobs:
         if: ${{ !cancelled() }}
 
       - name: Compile elements
+        shell: bash sst-core/.github/scripts/run_as_ci_user.sh {0}
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
           sst-core/.github/scripts/elements_autotools_noflags_nodeps.sh gcc
 
       - name: Test elements
+        shell: bash sst-core/.github/scripts/run_as_ci_user.sh {0}
         run: |
           install_autotools_noflags_nodeps_gcc/bin/sst-test-elements
 

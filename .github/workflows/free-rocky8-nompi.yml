@@ -58,6 +58,10 @@ jobs:
           max-size: "2GB"
           verbose: 2
 
+      - name: Create unprivileged build user
+        run: |
+          sst-core/.github/scripts/run_as_ci_user.sh --setup
+
       - name: Set environment variables
         run: |
           MAKEFLAGS="-j$(nproc)"
@@ -65,11 +69,13 @@ jobs:
           echo "TERM=dumb" >> "${GITHUB_ENV}"
 
       - name: Compile core
+        shell: bash sst-core/.github/scripts/run_as_ci_user.sh {0}
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
           sst-core/.github/scripts/core_autotools_noflags_nodeps_nompi.sh gcc
 
       - name: Test core
+        shell: bash sst-core/.github/scripts/run_as_ci_user.sh {0}
         run: |
           install_autotools_noflags_nodeps_nompi_gcc/bin/sst-test-core
 
@@ -84,11 +90,13 @@ jobs:
         if: ${{ !cancelled() }}
 
       - name: Compile elements
+        shell: bash sst-core/.github/scripts/run_as_ci_user.sh {0}
         run: |
           # TODO the argument does nothing as long as Spack is unavailable
           sst-core/.github/scripts/elements_autotools_noflags_nodeps_nompi.sh gcc
 
       - name: Test elements
+        shell: bash sst-core/.github/scripts/run_as_ci_user.sh {0}
         run: |
           install_autotools_noflags_nodeps_nompi_gcc/bin/sst-test-elements
 
