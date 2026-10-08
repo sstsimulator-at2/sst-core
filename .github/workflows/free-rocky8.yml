@@ -13,7 +13,7 @@ permissions: {}
 jobs:
   rocky8:
     name: Build/test core ref and elements devel
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     container:
       image: rockylinux/rockylinux:8.10@sha256:e8a49c5403b687db05d4d67333fa45808fbe74f36e683cec7abb1f7d0f2338c6
     steps:
