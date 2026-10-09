@@ -1,0 +1,28 @@
+# EditorConfig: https://editorconfig.org
+#
+# Settings are per file type only.  There is no [*] section, because test
+# reference outputs must stay byte-exact.
+
+root = true
+
+[*.{sh,bash}]
+indent_style = space
+indent_size = 4
+# Read by shfmt.
+switch_case_indent = true
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[{Makefile,Makefile.am,Makefile.in,*.mk}]
+indent_style = tab
+
+[*.{h,cc,cpp,c}]
+# Same as .clang-format.
+indent_style = space
+indent_size = 4

@@ -27,63 +27,161 @@ jobs:
         uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5.3.2
         with:
           skip_after_successful_duplicate: 'true'
-  # rocky8:
+  # at2-rocky8:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/at2-rocky8.yml
-  rocky8-nompi:
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: '["self-hosted", "sst-rocky8"]'
+  #     # The runner image has the dependencies.
+  #     install-deps: false
+  #     ccache-key: at2-rocky8-mpi-gcc
+  #     ccache-save: true
+  #     artifact-name: at2-rocky8
+  at2-rocky8-nompi:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
-      $/.github/workflows/at2-rocky8-nompi.yml
-  # rocky9:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '["self-hosted", "sst-rocky8"]'
+      # The runner image has the dependencies.
+      install-deps: false
+      mpi: false
+      ccache-key: at2-rocky8-nompi-gcc
+      ccache-save: true
+      artifact-name: at2-rocky8-nompi
+  # at2-rocky9:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/at2-rocky9.yml
-  rocky9-nompi:
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: '["self-hosted", "sst-rocky9"]'
+  #     # The runner image has the dependencies.
+  #     install-deps: false
+  #     ccache-key: at2-rocky9-mpi-gcc
+  #     ccache-save: true
+  #     artifact-name: at2-rocky9
+  at2-rocky9-nompi:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
-      $/.github/workflows/at2-rocky9-nompi.yml
-  # rocky9-cmake:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '["self-hosted", "sst-rocky9"]'
+      # The runner image has the dependencies.
+      install-deps: false
+      mpi: false
+      ccache-key: at2-rocky9-nompi-gcc
+      ccache-save: true
+      artifact-name: at2-rocky9-nompi
+  # at2-rocky9-clang:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/at2-rocky9-cmake.yml
-  # rocky9-clang:
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: '["self-hosted", "sst-rocky9"]'
+  #     # The runner image has the dependencies.
+  #     install-deps: false
+  #     toolchain: clang
+  #     ccache-key: at2-rocky9-mpi-clang
+  #     ccache-save: true
+  #     artifact-name: at2-rocky9-clang
+  # at2-rocky9-make-dist:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/at2-rocky9-clang.yml
-  # rocky9-make-dist:
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: '["self-hosted", "sst-rocky9"]'
+  #     # The runner image has the dependencies.
+  #     install-deps: false
+  #     make-dist: true
+  #     ccache-key: at2-rocky9-mpi-gcc
+  #     artifact-name: at2-rocky9-make-dist
+  # at2-rocky9-mr-2:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/at2-rocky9-make-dist.yml
-  # rocky9-mr-2:
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: '["self-hosted", "sst-rocky9"]'
+  #     # The runner image has the dependencies.
+  #     install-deps: false
+  #     ranks: 2
+  #     ccache-key: at2-rocky9-mpi-gcc
+  #     artifact-name: at2-rocky9-mr-2
+  # at2-rocky9-mt-2:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/at2-rocky9-mr-2.yml
-  # rocky9-mt-2:
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: '["self-hosted", "sst-rocky9"]'
+  #     # The runner image has the dependencies.
+  #     install-deps: false
+  #     threads: 2
+  #     ccache-key: at2-rocky9-mpi-gcc
+  #     artifact-name: at2-rocky9-mt-2
+  # at2-ubuntu2204:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/at2-rocky9-mt-2.yml
-  # ubuntu2204:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
-  #   uses:
-  #     $/.github/workflows/at2-ubuntu2204.yml
-  ubuntu2404-nompi:
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: '["self-hosted", "sst-ubuntu2204"]'
+  #     # The runner image has the dependencies.
+  #     install-deps: false
+  #     ccache-key: at2-ubuntu2204-mpi-gcc
+  #     ccache-save: true
+  #     artifact-name: at2-ubuntu2204
+  at2-ubuntu2404-nompi:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
-      $/.github/workflows/at2-ubuntu2404-nompi.yml
-  # ubuntu2404:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '["self-hosted", "sst-ubuntu2404"]'
+      # The runner image has the dependencies.
+      install-deps: false
+      mpi: false
+      ccache-key: at2-ubuntu2404-nompi-gcc
+      ccache-save: true
+      artifact-name: at2-ubuntu2404-nompi
+  # at2-ubuntu2404:
   #   needs: pre-checks
   #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/at2-ubuntu2404.yml
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: '["self-hosted", "sst-ubuntu2404"]'
+  #     # The runner image has the dependencies.
+  #     install-deps: false
+  #     ccache-key: at2-ubuntu2404-mpi-gcc
+  #     ccache-save: true
+  #     artifact-name: at2-ubuntu2404

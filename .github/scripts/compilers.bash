@@ -21,8 +21,16 @@ source_compilers_nompi() {
     # compiler_paths="$(spack python "${SCRIPTDIR}"/spack_get_compilers.py --spec "${spack_compiler_spec}")"
     # CC="$(echo "${compiler_paths}" | jq -r .c)"
     # CXX="$(echo "${compiler_paths}" | jq -r .cxx)"
-    CC="$(command -v gcc)"
-    CXX="$(command -v g++)"
+    case "${spack_compiler_spec}" in
+        clang*)
+            CC="$(command -v clang)"
+            CXX="$(command -v clang++)"
+            ;;
+        *)
+            CC="$(command -v gcc)"
+            CXX="$(command -v g++)"
+            ;;
+    esac
     export CC
     export CXX
 
@@ -51,6 +59,11 @@ source_compilers_mpi() {
     MPICXX="$(command -v mpicxx)"
     export MPICC
     export MPICXX
+
+    # The MPI compiler wrappers call the compiler they were built with
+    # (GCC) unless told otherwise.
+    export OMPI_CC="${CC}"
+    export OMPI_CXX="${CXX}"
 }
 
 # delete '@' and '=' characters if present

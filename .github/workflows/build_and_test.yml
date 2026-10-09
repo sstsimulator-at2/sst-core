@@ -11,6 +11,8 @@ concurrency:
 
 permissions: {}
 
+# Jobs that build the same configuration share a ccache-key, and only one of
+# them saves it.  See build-test.yml.
 jobs:
   # Jobs depend on the output of pre-checks to run.
   # Cancels new workflows if prior runs were successful (same tree hash)
@@ -26,28 +28,177 @@ jobs:
         uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5.3.2
         with:
           skip_after_successful_duplicate: 'true'
-  arch:
+  rocky8-mpi-mr-2:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
-      $/.github/workflows/free-arch.yml
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:8.10@sha256:e8a49c5403b687db05d4d67333fa45808fbe74f36e683cec7abb1f7d0f2338c6
+      ranks: 2
+      ccache-key: rocky8-mpi-gcc
+      ccache-save: true
+      artifact-name: rocky8-mpi-mr-2
+  rocky9-mpi:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:9
+      ccache-key: rocky9-mpi-gcc
+      ccache-save: true
+      artifact-name: rocky9-mpi
+  rocky9-mpi-clang:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:9
+      toolchain: clang
+      ccache-key: rocky9-mpi-clang
+      ccache-save: true
+      artifact-name: rocky9-mpi-clang
+  rocky9-mpi-make-dist:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:9
+      make-dist: true
+      ccache-key: rocky9-mpi-gcc
+      artifact-name: rocky9-mpi-make-dist
+  rocky9-mpi-mr-2:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:9
+      ranks: 2
+      ccache-key: rocky9-mpi-gcc
+      artifact-name: rocky9-mpi-mr-2
+  rocky9-mpi-mr-2-mt-2:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:9
+      ranks: 2
+      threads: 2
+      ccache-key: rocky9-mpi-gcc
+      artifact-name: rocky9-mpi-mr-2-mt-2
+  rocky9-mpi-mt-2:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:9
+      threads: 2
+      ccache-key: rocky9-mpi-gcc
+      artifact-name: rocky9-mpi-mt-2
+  rocky9-nompi:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:9
+      mpi: false
+      ccache-key: rocky9-nompi-gcc
+      ccache-save: true
+      artifact-name: rocky9-nompi
+  rocky10-mpi-mr-2:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: rockylinux/rockylinux:10
+      ranks: 2
+      ccache-key: rocky10-mpi-gcc
+      ccache-save: true
+      artifact-name: rocky10-mpi-mr-2
+  ubuntu2404-mpi:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: ubuntu:24.04
+      ccache-key: ubuntu2404-mpi-gcc
+      ccache-save: true
+      artifact-name: ubuntu2404-mpi
+  ubuntu2604-mpi:
+    needs: pre-checks
+    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+    uses:
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"ubuntu-26.04"'
+      image: ubuntu:26.04
+      ccache-key: ubuntu2604-mpi-gcc
+      ccache-save: true
+      artifact-name: ubuntu2604-mpi
   macos-15:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
-      $/.github/workflows/free-macos-15.yml
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"macos-15"'
+      python-version: '3.13'
+      ccache-key: macos-15
+      ccache-save: true
+      artifact-name: macos-15
   macos-26:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
-      $/.github/workflows/free-macos-26.yml
-  rocky8:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
-    uses:
-      $/.github/workflows/free-rocky8.yml
-  rocky8-nompi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
-    uses:
-      $/.github/workflows/free-rocky8-nompi.yml
+      $/.github/workflows/build-test.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: '"macos-26"'
+      python-version: '3.13'
+      ccache-key: macos-26
+      ccache-save: true
+      artifact-name: macos-26
