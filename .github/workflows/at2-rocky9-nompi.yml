@@ -42,6 +42,9 @@ jobs:
           key: >-
             at2-rocky9-nompi
           max-size: "1.5GB"
+          # Only devel saves: caches from other refs are not shared, and
+          # they push the devel caches out of the 10 GB repo limit.
+          save: ${{ github.ref == 'refs/heads/devel' }}
           verbose: 2
 
       - name: Set environment variables

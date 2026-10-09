@@ -3,7 +3,10 @@ name: ci
 
 # yamllint disable-line rule:truthy
 on:
+  # Branches in this repository get tested through their pull requests.
   push:
+    branches:
+      - devel
   pull_request:
     types:
       - opened
