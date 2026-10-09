@@ -24,7 +24,7 @@ jobs:
   all-prechecks:
     needs: [prechecks]
     name: CI precheck success
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Success
         run: "true"
@@ -46,7 +46,7 @@ jobs:
     # needs: [tests, at2-tests]
     needs: [tests]
     name: CI success
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Success
         run: "true"

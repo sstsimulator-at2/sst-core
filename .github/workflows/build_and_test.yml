@@ -16,7 +16,7 @@ jobs:
   # Cancels new workflows if prior runs were successful (same tree hash)
   pre-checks:
     name: Determine if build/test should be performed
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: write # needed by skip-duplicate-actions
     outputs:
