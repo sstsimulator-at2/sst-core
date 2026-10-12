@@ -125,7 +125,7 @@ jobs:
   #     runs-on: '["self-hosted", "sst-rocky9"]'
   #     # The runner image has the dependencies.
   #     install-deps: false
-  #     ranks: 2
+  #     test-ranks: 2
   #     ccache-key: at2-rocky9-mpi-gcc
   #     artifact-name: at2-rocky9-mr-2
   # at2-rocky9-mt-2:
@@ -139,7 +139,7 @@ jobs:
   #     runs-on: '["self-hosted", "sst-rocky9"]'
   #     # The runner image has the dependencies.
   #     install-deps: false
-  #     threads: 2
+  #     test-threads: 2
   #     ccache-key: at2-rocky9-mpi-gcc
   #     artifact-name: at2-rocky9-mt-2
   # at2-ubuntu2204:
