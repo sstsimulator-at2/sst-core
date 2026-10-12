@@ -1,15 +1,31 @@
 ---
-# Build and test sst-core and sst-elements together.  This file is the same
-# in both repositories: the repository that calls it is tested at the
-# current ref, and the other one at devel.
+# Build and test sst-core and sst-elements together.  The repository that
+# calls it is tested at the current ref, and the other one at devel.
+# sst-elements calls this file from sst-core devel, so only one copy exists.
+#
+# Keep this a reusable workflow.  Do not make it a composite action:
+#
+# - The job sets runs-on, container (with --shm-size) and permissions.  A
+#   composite action runs as steps in the job of the caller, so each of the
+#   13 jobs in build_and_test.yml would have to set them again.
+# - Each step shows as its own step in the run log.  The steps of a
+#   composite action show as one step of the caller, which makes a failure
+#   in one of them harder to find.
+# - A composite action in this repository can run only after a checkout.
+#   This workflow does the checkouts itself, at the paths that the CI
+#   scripts expect.
 name: Build/test
 
 # yamllint disable-line rule:truthy
 on:
   workflow_call:
     inputs:
+      # An input cannot be a list, so give a list of labels as JSON.  A
+      # single label needs no JSON quotes:
+      #   runs-on: ubuntu-26.04                     (build_and_test.yml)
+      #   runs-on: '["self-hosted", "sst-rocky8"]'  (build_and_test_at2.yml)
       runs-on:
-        description: Runner labels, as JSON (a string or a list)
+        description: Runner label, or a JSON list of labels
         required: true
         type: string
       image:
@@ -64,7 +80,7 @@ permissions: {}
 jobs:
   build-test:
     name: Build/test core and elements
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ${{ startsWith(inputs.runs-on, '[') && fromJSON(inputs.runs-on) || inputs.runs-on }}
     container:
       # The callers choose the image, and pin it there.
       image: ${{ inputs.image }} # zizmor: ignore[unpinned-images]
