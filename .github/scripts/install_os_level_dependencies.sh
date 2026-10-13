@@ -7,6 +7,8 @@
 
 set -euo pipefail
 
+# Doxygen and bzip3 are for `make dist`.
+
 export DEBIAN_FRONTEND=noninteractive
 if command -v brew; then
     brew install \
@@ -36,6 +38,7 @@ elif command -v dnf; then
     packages=(
         autoconf
         automake
+        bzip2
         ccache
         diffutils
         doxygen
