@@ -14,23 +14,7 @@ permissions: {}
 # Jobs that build the same configuration share a ccache-key, and only one of
 # them saves it.
 jobs:
-  # Jobs depend on the output of pre-checks to run.
-  # Cancels new workflows if prior runs were successful (same tree hash)
-  pre-checks:
-    name: Determine if build/test should be performed
-    runs-on: ubuntu-26.04
-    permissions:
-      actions: write # needed by skip-duplicate-actions
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5.3.2
-        with:
-          skip_after_successful_duplicate: 'true'
   rocky8-mpi-mr-2:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -43,8 +27,6 @@ jobs:
       ccache-save: true
       artifact-name: rocky8-mpi-mr-2
   rocky9-mpi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -56,8 +38,6 @@ jobs:
       ccache-save: true
       artifact-name: rocky9-mpi
   rocky9-mpi-clang:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -70,8 +50,6 @@ jobs:
       ccache-save: true
       artifact-name: rocky9-mpi-clang
   rocky9-mpi-make-dist:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -83,8 +61,6 @@ jobs:
       ccache-key: rocky9-mpi-gcc
       artifact-name: rocky9-mpi-make-dist
   rocky9-mpi-mr-2:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -96,8 +72,6 @@ jobs:
       ccache-key: rocky9-mpi-gcc
       artifact-name: rocky9-mpi-mr-2
   rocky9-mpi-mr-2-mt-2:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -110,8 +84,6 @@ jobs:
       ccache-key: rocky9-mpi-gcc
       artifact-name: rocky9-mpi-mr-2-mt-2
   rocky9-mpi-mt-2:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -123,8 +95,6 @@ jobs:
       ccache-key: rocky9-mpi-gcc
       artifact-name: rocky9-mpi-mt-2
   rocky9-nompi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -139,8 +109,6 @@ jobs:
   # Left out in favor of rocky10-nompi while we debug OpenMPI 5
   #
   # rocky10-mpi-mr-2:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
@@ -153,8 +121,6 @@ jobs:
   #     ccache-save: true
   #     artifact-name: rocky10-mpi-mr-2
   rocky10-nompi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -166,8 +132,6 @@ jobs:
       ccache-save: true
       artifact-name: rocky10-nompi
   ubuntu2404-mpi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -179,8 +143,6 @@ jobs:
       ccache-save: true
       artifact-name: ubuntu2404-mpi
   ubuntu2604-mpi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -192,8 +154,6 @@ jobs:
       ccache-save: true
       artifact-name: ubuntu2604-mpi
   macos-15:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -205,8 +165,6 @@ jobs:
       ccache-save: true
       artifact-name: macos-15
   macos-26:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:

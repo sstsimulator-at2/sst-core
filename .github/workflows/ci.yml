@@ -35,13 +35,11 @@ jobs:
     needs: [all-prechecks]
     uses: $/.github/workflows/build_and_test.yml
     permissions:
-      actions: write # needed by skip-duplicate-actions
       packages: write # to save ccache in ghcr.io
   # at2-tests:
   #   needs: [all-prechecks]
   #   uses: $/.github/workflows/build_and_test_at2.yml
   #   permissions:
-  #     actions: write
   #     packages: write
   #   # runs-on: ubuntu-24.04
   #   # steps:
