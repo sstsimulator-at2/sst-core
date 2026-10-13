@@ -130,12 +130,13 @@ jobs:
   #     packages: write # to save ccache
   #   with:
   #     runs-on: ubuntu-26.04
+  #     test-categories: ${{ inputs.test-categories }}
   #     image: rockylinux/rockylinux:10
   #     test-ranks: 2
   #     ccache-key: rocky10-mpi-gcc
   #     ccache-save: true
   #     artifact-name: rocky10-mpi-mr-2
-  rocky10-nompi:
+  rocky10-mpi:
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -144,9 +145,9 @@ jobs:
       runs-on: ubuntu-26.04
       test-categories: ${{ inputs.test-categories }}
       image: rockylinux/rockylinux:10
-      ccache-key: rocky10-nompi-gcc
+      ccache-key: rocky10-mpi-gcc
       ccache-save: true
-      artifact-name: rocky10-nompi
+      artifact-name: rocky10-mpi
   ubuntu2404-mpi:
     uses:
       $/.github/workflows/build-test.yml
