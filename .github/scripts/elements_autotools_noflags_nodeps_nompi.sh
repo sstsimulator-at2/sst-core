@@ -27,8 +27,12 @@ dir_install="${dir_core}"
 # \rm -rf "${dir_install}" || true
 
 pushd "${dir_src}"
-git clean -Xdf .
-./autogen.sh
+# A source tree from "make dist" is not a git checkout and must build with
+# configure alone.
+if [[ -d .git ]]; then
+    git clean -Xdf .
+    ./autogen.sh
+fi
 popd
 
 mkdir -p "${dir_build}"

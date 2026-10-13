@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# set_env.sh: Write the environment of the build and test steps to
+# GITHUB_ENV, from the inputs of build-test.yml.
+#
+# Usage: set_env.sh
+#
+# Reads SST_MPI (true or false), SST_TOOLCHAIN, SST_TEST_RANKS and
+# SST_TEST_THREADS from the environment, which the workflow step sets from
+# its inputs.
+
+set -euo pipefail
+
+if [[ "${SST_MPI}" == "true" ]]; then
+    mpi_suffix=""
+else
+    mpi_suffix="_nompi"
+fi
+MAKEFLAGS="-j$(nproc)"
+{
+    echo "MAKEFLAGS=${MAKEFLAGS}"
+    echo "TERM=dumb"
+    # https://github.com/open-mpi/ompi/issues/11295
+    echo "PSM3_DEVICES=self"
+    # Runners have 2 cores with 2 hardware threads each; let
+    # "--map-by numa:PE=N" count hardware threads (OpenMPI 4).
+    echo "OMPI_MCA_hwloc_base_use_hwthreads_as_cpus=1"
+    echo "SST_MPI_SUFFIX=${mpi_suffix}"
+    echo "SST_TOOLCHAIN=${SST_TOOLCHAIN}"
+    echo "SST_INSTALL_DIR=${GITHUB_WORKSPACE}/install_autotools_noflags_nodeps${mpi_suffix}_${SST_TOOLCHAIN}"
+    echo "SST_TEST_RANKS=${SST_TEST_RANKS}"
+    echo "SST_TEST_THREADS=${SST_TEST_THREADS}"
+} >>"${GITHUB_ENV}"
