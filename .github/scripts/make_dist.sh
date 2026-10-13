@@ -33,7 +33,7 @@ toolchain="${1}"
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # compilers.bash is not clean under "set -u".
 set +u
-# shellcheck source=compilers.bash
+# shellcheck source=SCRIPTDIR/compilers.bash
 source "${scriptdir}/compilers.bash"
 source_compilers_mpi "${toolchain}"
 set -u
@@ -51,13 +51,23 @@ dir_dist="${PWD}/dist"
 rm -rf "${dir_core_build}" "${dir_elements_build}" "${dir_install}" "${dir_dist}"
 mkdir -p "${dir_dist}"
 
-# Print the only tarball in directory $1.
+# Print the only tarball in directory $1 whose name matches one of the
+# patterns $2....
 find_tarball() {
     local dir="${1}"
+    shift
+    local names=()
+    local pattern
+    for pattern in "$@"; do
+        if [[ "${#names[@]}" -gt 0 ]]; then
+            names+=(-o)
+        fi
+        names+=(-name "${pattern}")
+    done
     local tarballs=()
-    mapfile -t tarballs < <(find "${dir}" -maxdepth 1 -name 'sst-*.tar.gz')
+    mapfile -t tarballs < <(find "${dir}" -maxdepth 1 \( "${names[@]}" \))
     if [[ "${#tarballs[@]}" -ne 1 ]]; then
-        echo "expected one sst-*.tar.gz in ${dir}, found ${#tarballs[@]}" >&2
+        echo "expected one of $* in ${dir}, found ${#tarballs[@]}" >&2
         exit 1
     fi
     echo "${tarballs[0]}"
@@ -82,7 +92,10 @@ mkdir -p "${dir_core_build}"
 pushd "${dir_core_build}"
 "${dir_core_src}/configure" --prefix="${dir_install}"
 make dist
-mv "$(find_tarball "${dir_core_build}")" "${dir_dist}/"
+# AC_INIT([SSTCore], ...) names the tarball sstcore-VERSION.
+core_tarball="$(find_tarball "${dir_core_build}" 'sstcore-*.tar.gz' 'sst-core-*.tar.gz')"
+mv "${core_tarball}" "${dir_dist}/"
+core_tarball="${dir_dist}/$(basename "${core_tarball}")"
 make -j"$(max_cpus)"
 make install
 popd
@@ -99,30 +112,17 @@ pushd "${dir_elements_build}"
     --with-sst-core="${dir_install}" \
     --without-pin
 make dist
-mv "$(find_tarball "${dir_elements_build}")" "${dir_dist}/"
+# AC_INIT([SST Elements Library], ...) names the tarball
+# sst-elements-library-VERSION.
+elements_tarball="$(find_tarball "${dir_elements_build}" 'sst-elements-*.tar.gz')"
+mv "${elements_tarball}" "${dir_dist}/"
+elements_tarball="${dir_dist}/$(basename "${elements_tarball}")"
 popd
 echo "::endgroup::"
 
 echo "::group::replace the git checkouts with the tarballs"
 rm -rf "${dir_core_src}" "${dir_elements_src}"
 rm -rf "${dir_core_build}" "${dir_elements_build}" "${dir_install}"
-# Both tarballs are in dist/ now; tell them apart by name.
-core_tarball=""
-elements_tarball=""
-for tarball in "${dir_dist}"/sst-*.tar.gz; do
-    case "$(basename "${tarball}")" in
-        sst-core-*)
-            core_tarball="${tarball}"
-            ;;
-        *)
-            elements_tarball="${tarball}"
-            ;;
-    esac
-done
-if [[ -z "${core_tarball}" || -z "${elements_tarball}" ]]; then
-    echo "expected a core and an elements tarball in ${dir_dist}" >&2
-    exit 1
-fi
 unpack_as "${core_tarball}" "${dir_core_src}"
 unpack_as "${elements_tarball}" "${dir_elements_src}"
 ls -l "${dir_dist}" "${dir_core_src}" "${dir_elements_src}"
