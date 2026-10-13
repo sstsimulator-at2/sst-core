@@ -184,6 +184,8 @@ jobs:
           } >> "${GITHUB_ENV}"
 
       - name: Print MPI information
+        if: ${{ runner.os != 'macOS' }}
+        shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
         run: |
           nproc
           lscpu | grep --extended-regexp 'Thread|Core|Socket|NUMA'
