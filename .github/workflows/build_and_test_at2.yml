@@ -13,23 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Jobs depend on the output of pre-checks to run.
-  # Cancels new workflows if prior runs were successful (same tree hash)
-  pre-checks:
-    name: Determine if build/test should be performed
-    runs-on: ubuntu-26.04
-    permissions:
-      actions: write # needed by skip-duplicate-actions
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5.3.2
-        with:
-          skip_after_successful_duplicate: 'true'
   # at2-rocky8:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
@@ -42,8 +27,7 @@ jobs:
   #     ccache-save: true
   #     artifact-name: at2-rocky8
   at2-rocky8-nompi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+    if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -57,8 +41,7 @@ jobs:
       ccache-save: true
       artifact-name: at2-rocky8-nompi
   # at2-rocky9:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
@@ -71,8 +54,7 @@ jobs:
   #     ccache-save: true
   #     artifact-name: at2-rocky9
   at2-rocky9-nompi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+    if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -86,8 +68,7 @@ jobs:
       ccache-save: true
       artifact-name: at2-rocky9-nompi
   # at2-rocky9-clang:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
@@ -101,8 +82,7 @@ jobs:
   #     ccache-save: true
   #     artifact-name: at2-rocky9-clang
   # at2-rocky9-make-dist:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
@@ -115,8 +95,7 @@ jobs:
   #     ccache-key: at2-rocky9-mpi-gcc
   #     artifact-name: at2-rocky9-make-dist
   # at2-rocky9-mr-2:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
@@ -129,8 +108,7 @@ jobs:
   #     ccache-key: at2-rocky9-mpi-gcc
   #     artifact-name: at2-rocky9-mr-2
   # at2-rocky9-mt-2:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
@@ -143,8 +121,7 @@ jobs:
   #     ccache-key: at2-rocky9-mpi-gcc
   #     artifact-name: at2-rocky9-mt-2
   # at2-ubuntu2204:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
@@ -157,8 +134,7 @@ jobs:
   #     ccache-save: true
   #     artifact-name: at2-ubuntu2204
   at2-ubuntu2404-nompi:
-    needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+    if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
       $/.github/workflows/build-test.yml
     permissions:
@@ -172,8 +148,7 @@ jobs:
       ccache-save: true
       artifact-name: at2-ubuntu2404-nompi
   # at2-ubuntu2404:
-  #   needs: pre-checks
-  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
+  #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
   #     $/.github/workflows/build-test.yml
   #   permissions:
