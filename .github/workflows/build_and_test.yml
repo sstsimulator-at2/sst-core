@@ -136,7 +136,23 @@ jobs:
       ccache-key: rocky9-nompi-gcc
       ccache-save: true
       artifact-name: rocky9-nompi
-  rocky10-mpi-mr-2:
+  # Left out in favor of rocky10-nompi while we debug OpenMPI 5
+  #
+  # rocky10-mpi-mr-2:
+  #   needs: pre-checks
+  #   if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
+  #   uses:
+  #     $/.github/workflows/build-test.yml
+  #   permissions:
+  #     packages: write # to save ccache
+  #   with:
+  #     runs-on: ubuntu-26.04
+  #     image: rockylinux/rockylinux:10
+  #     test-ranks: 2
+  #     ccache-key: rocky10-mpi-gcc
+  #     ccache-save: true
+  #     artifact-name: rocky10-mpi-mr-2
+  rocky10-nompi:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
     uses:
@@ -146,10 +162,9 @@ jobs:
     with:
       runs-on: ubuntu-26.04
       image: rockylinux/rockylinux:10
-      test-ranks: 2
-      ccache-key: rocky10-mpi-gcc
+      ccache-key: rocky10-nompi-gcc
       ccache-save: true
-      artifact-name: rocky10-mpi-mr-2
+      artifact-name: rocky10-nompi
   ubuntu2404-mpi:
     needs: pre-checks
     if: ${{ needs.pre-checks.outputs.should_skip != 'true' }}
