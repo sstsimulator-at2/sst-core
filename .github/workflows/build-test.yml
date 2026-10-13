@@ -84,6 +84,10 @@ jobs:
     container:
       # The callers choose the image, and pin it there.
       image: ${{ inputs.image }} # zizmor: ignore[unpinned-images]
+      # Some images (rockylinux:9 and :10) do not set PATH.  Then an entry
+      # in GITHUB_PATH becomes the whole PATH, and sh and tar are not found.
+      env:
+        PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       # Docker's default 64 MiB /dev/shm is too small for the OpenMPI 5
       # shared-memory segment, which then warns on stderr.
       options: --shm-size=1g

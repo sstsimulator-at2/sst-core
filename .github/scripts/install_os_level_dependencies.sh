@@ -78,7 +78,6 @@ elif command -v apt-get; then
         libopenmpi-dev
         libtool-bin
         openmpi-bin
-        python3-blessings
         python3-dev
         python3-pygments
         wget
@@ -87,6 +86,11 @@ elif command -v apt-get; then
         packages+=(clang)
     fi
     apt-get -y update
+    # blessings is optional (colored test output).  Ubuntu 26.04 does not
+    # have it.
+    if apt-cache show python3-blessings >/dev/null 2>&1; then
+        packages+=(python3-blessings)
+    fi
     apt-get -y install "${packages[@]}"
 elif command -v pacman >/dev/null 2>&1; then
     pacman -Syu --noconfirm
