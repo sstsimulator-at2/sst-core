@@ -5,9 +5,9 @@
 #
 # Usage: set_env.sh
 #
-# Reads SST_MPI (true or false), SST_TOOLCHAIN, SST_TEST_RANKS and
-# SST_TEST_THREADS from the environment, which the workflow step sets from
-# its inputs.
+# Reads SST_MPI (true or false), SST_TOOLCHAIN, SST_TEST_RANKS,
+# SST_TEST_THREADS, SST_TEST_CATEGORIES and SST_TEST_OVERSUBSCRIBE (true or
+# false) from the environment, which the workflow step sets from its inputs.
 
 set -euo pipefail
 
@@ -30,4 +30,11 @@ MAKEFLAGS="-j$(nproc)"
     echo "SST_INSTALL_DIR=${GITHUB_WORKSPACE}/install_autotools_noflags_nodeps${mpi_suffix}_${SST_TOOLCHAIN}"
     echo "SST_TEST_RANKS=${SST_TEST_RANKS}"
     echo "SST_TEST_THREADS=${SST_TEST_THREADS}"
+    echo "SST_TEST_CATEGORIES=${SST_TEST_CATEGORIES}"
+    if [[ "${SST_TEST_OVERSUBSCRIBE}" == "true" ]]; then
+        # Ranks x threads is more than the hardware threads of the runner.
+        # Let OpenMPI place the extra PEs instead of refusing to start.
+        echo "OMPI_MCA_rmaps_base_oversubscribe=1"
+        echo "OMPI_MCA_hwloc_base_binding_policy=core:overload-allowed"
+    fi
 } >>"${GITHUB_ENV}"

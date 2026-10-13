@@ -48,6 +48,16 @@ on:
         description: Threads for sst-test-core/elements (-t)
         default: 1
         type: number
+      test-categories:
+        description: >-
+          Space-separated test categories for sst-test-core/elements (-m)
+        default: pr
+        type: string
+      test-oversubscribe:
+        description: >-
+          Let OpenMPI place more PEs than the runner has hardware threads
+        default: false
+        type: boolean
       make-dist:
         description: Build and test from the "make dist" tarballs
         default: false
@@ -164,6 +174,8 @@ jobs:
           SST_TOOLCHAIN: ${{ inputs.toolchain }}
           SST_TEST_RANKS: ${{ inputs.test-ranks }}
           SST_TEST_THREADS: ${{ inputs.test-threads }}
+          SST_TEST_CATEGORIES: ${{ inputs.test-categories }}
+          SST_TEST_OVERSUBSCRIBE: ${{ inputs.test-oversubscribe }}
         run: |
           sst-ci-scripts/set_env.sh
 
@@ -191,7 +203,8 @@ jobs:
       - name: Test core
         shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
         run: |
-          "${SST_INSTALL_DIR}"/bin/sst-test-core -r "${SST_TEST_RANKS}" -t "${SST_TEST_THREADS}"
+          read -r -a categories <<<"${SST_TEST_CATEGORIES}"
+          "${SST_INSTALL_DIR}"/bin/sst-test-core -r "${SST_TEST_RANKS}" -t "${SST_TEST_THREADS}" -m "${categories[@]}"
 
       - name: Save sst_test_outputs after core tests
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -211,7 +224,8 @@ jobs:
       - name: Test elements
         shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
         run: |
-          "${SST_INSTALL_DIR}"/bin/sst-test-elements -r "${SST_TEST_RANKS}" -t "${SST_TEST_THREADS}"
+          read -r -a categories <<<"${SST_TEST_CATEGORIES}"
+          "${SST_INSTALL_DIR}"/bin/sst-test-elements -r "${SST_TEST_RANKS}" -t "${SST_TEST_THREADS}" -m "${categories[@]}"
 
       - name: Save sst_test_outputs after elements tests
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -228,10 +242,11 @@ jobs:
         run: |
           ccache --show-stats || true
 
-      # Only devel saves: builds of other refs would replace the devel cache
-      # with objects that devel does not use.
+      # Only devel saves (on push, and in the nightly run): builds of other
+      # refs would replace the devel cache with objects that devel does not
+      # use.
       - name: Save ccache
-        if: ${{ !cancelled() && inputs.ccache-save && github.event_name == 'push' && github.ref == 'refs/heads/devel' }}
+        if: ${{ !cancelled() && inputs.ccache-save && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/devel' }}
         continue-on-error: true
         env:
           CCACHE_KEY: ${{ inputs.ccache-key }}
