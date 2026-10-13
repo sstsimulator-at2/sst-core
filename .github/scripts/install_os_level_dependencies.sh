@@ -93,15 +93,4 @@ elif command -v apt-get; then
         packages+=(python3-blessings)
     fi
     apt-get -y install "${packages[@]}"
-elif command -v pacman >/dev/null 2>&1; then
-    pacman -Syu --noconfirm
-    pacman -S --noconfirm \
-           autoconf \
-           automake \
-           gcc \
-           make \
-           ncurses \
-           openmpi \
-           python \
-           wget
 fi
