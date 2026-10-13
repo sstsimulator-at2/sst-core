@@ -183,6 +183,14 @@ jobs:
               echo "SST_TEST_THREADS=${SST_TEST_THREADS}"
           } >> "${GITHUB_ENV}"
 
+      - name: Print MPI information
+        run: |
+          nproc
+          lscpu | grep --extended-regexp 'Thread|Core|Socket|NUMA'
+          mpirun -np 2 --map-by numa:PE=2 --output-filename /tmp/mpitest \
+            "${SST_INSTALL_DIR}/bin/sst" -n 2 sst-core/tests/test_Component.py
+          echo "rc=$?"
+
       - name: Replace the sources with the make dist tarballs
         if: ${{ inputs.make-dist }}
         shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
