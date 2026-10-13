@@ -38,6 +38,7 @@ elif command -v dnf; then
         automake
         ccache
         diffutils
+        doxygen
         gcc-c++
         gzip
         libtool
