@@ -5,7 +5,8 @@
 #
 # Usage:
 #   ccache_ghcr.sh setup        configure ccache for the following steps
-#   ccache_ghcr.sh restore KEY  pull ghcr.io/<owner>/ccache:KEY, if present
+#   ccache_ghcr.sh restore KEY  pull ghcr.io/<owner>/ccache:KEY, if present;
+#                               needs GITHUB_TOKEN with packages: read
 #   ccache_ghcr.sh save KEY     push the cache as ghcr.io/<owner>/ccache:KEY;
 #                               needs GITHUB_TOKEN with packages: write
 #
@@ -51,6 +52,11 @@ masquerade_dir() {
     done
 }
 
+registry_login() {
+    printf '%s' "${GITHUB_TOKEN}" |
+        oras login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+}
+
 ccache_major_version() {
     ccache --version | sed -E -n '1s/^ccache version ([0-9]+).*/\1/p'
 }
@@ -83,6 +89,8 @@ do_restore() {
     : "${CCACHE_DIR:?run setup first}"
     ref="$(image_ref "${1}")"
     tmp="$(mktemp -d "${RUNNER_TEMP:-/tmp}/ccache.XXXXXX")"
+    # The package is private, so a pull without a login is denied.
+    registry_login
     if oras pull --output "${tmp}" "${ref}"; then
         tar -xf "${tmp}/${layer_file}" -C "${CCACHE_DIR}"
         ccache --show-stats
@@ -109,8 +117,7 @@ do_save() {
     tmp="$(mktemp -d "${RUNNER_TEMP:-/tmp}/ccache.XXXXXX")"
     # The cache entries are already compressed by ccache.
     tar -cf "${tmp}/${layer_file}" -C "${CCACHE_DIR}" .
-    printf '%s' "${GITHUB_TOKEN}" |
-        oras login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+    registry_login
     # oras refuses absolute file paths, so push from the directory.
     (
         cd "${tmp}"
