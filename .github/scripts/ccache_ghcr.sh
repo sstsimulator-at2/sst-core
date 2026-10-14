@@ -5,7 +5,8 @@
 #
 # Usage:
 #   ccache_ghcr.sh setup        configure ccache for the following steps
-#   ccache_ghcr.sh restore KEY  pull ghcr.io/<owner>/ccache:KEY, if present
+#   ccache_ghcr.sh restore KEY  pull ghcr.io/<owner>/ccache:KEY, if present;
+#                               needs GITHUB_TOKEN with packages: read
 #   ccache_ghcr.sh save KEY     push the cache as ghcr.io/<owner>/ccache:KEY;
 #                               needs GITHUB_TOKEN with packages: write
 #
@@ -51,6 +52,11 @@ masquerade_dir() {
     done
 }
 
+registry_login() {
+    printf '%s' "${GITHUB_TOKEN}" |
+        oras login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+}
+
 ccache_major_version() {
     ccache --version | sed -E -n '1s/^ccache version ([0-9]+).*/\1/p'
 }
@@ -83,6 +89,8 @@ do_restore() {
     : "${CCACHE_DIR:?run setup first}"
     ref="$(image_ref "${1}")"
     tmp="$(mktemp -d "${RUNNER_TEMP:-/tmp}/ccache.XXXXXX")"
+    # The package is private, so a pull without a login is denied.
+    registry_login
     if oras pull --output "${tmp}" "${ref}"; then
         tar -xf "${tmp}/${layer_file}" -C "${CCACHE_DIR}"
         ccache --show-stats
@@ -90,6 +98,23 @@ do_restore() {
         echo "::notice::no ccache at ${ref}; this build starts cold"
     fi
     rm -rf "${tmp}"
+}
+
+# A login succeeds even when the token has no packages permission, so a
+# missing permission shows only as a failed push.  The "Set up job" step of
+# the run log lists the permissions of the token.
+explain_push_failure() {
+    local ref="${1}"
+    local log="${2}"
+    local hint
+    if grep --quiet --fixed-strings "not allowed to Create organization package" "${log}"; then
+        hint="GITHUB_TOKEN cannot create the package.  The job must have 'permissions: packages: write' (check 'GITHUB_TOKEN Permissions' in 'Set up job'), and the organization must let GitHub Actions create packages."
+    elif grep --quiet --fixed-strings "denied" "${log}"; then
+        hint="GITHUB_TOKEN cannot push to the package.  The job must have 'permissions: packages: write' (check 'GITHUB_TOKEN Permissions' in 'Set up job'), and ${GITHUB_REPOSITORY} must have the Write role in 'Manage Actions access' of the package."
+    else
+        hint="see the oras output above."
+    fi
+    echo "::error::cannot save the ccache to ${ref}: ${hint}"
 }
 
 do_save() {
@@ -109,17 +134,20 @@ do_save() {
     tmp="$(mktemp -d "${RUNNER_TEMP:-/tmp}/ccache.XXXXXX")"
     # The cache entries are already compressed by ccache.
     tar -cf "${tmp}/${layer_file}" -C "${CCACHE_DIR}" .
-    printf '%s' "${GITHUB_TOKEN}" |
-        oras login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+    registry_login
     # oras refuses absolute file paths, so push from the directory.
-    (
-        cd "${tmp}"
+    if ! (
+        cd "${tmp}" || exit
         oras push \
             --artifact-type "${artifact_type}" \
             --annotation "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
             "${ref}" \
             "${layer_file}:${layer_type}"
-    )
+    ) 2>&1 | tee "${tmp}/push.log"; then
+        explain_push_failure "${ref}" "${tmp}/push.log"
+        rm -rf "${tmp}"
+        exit 1
+    fi
     rm -rf "${tmp}"
 }
 
