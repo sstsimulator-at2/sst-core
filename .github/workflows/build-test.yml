@@ -250,7 +250,6 @@ jobs:
       # use.
       - name: Save ccache
         if: ${{ !cancelled() && inputs.ccache-save && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/devel' }}
-        continue-on-error: true
         env:
           CCACHE_KEY: ${{ inputs.ccache-key }}
           GITHUB_TOKEN: ${{ github.token }}
