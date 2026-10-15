@@ -3,4 +3,4 @@ rules:
   unpinned-images:
     ignore:
       # The callers of sst-ci-job.yml choose the image and pin it there.
-      - sst-ci-job.yml:102
+      - sst-ci-job.yml:107

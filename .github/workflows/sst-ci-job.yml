@@ -42,6 +42,11 @@ on:
         description: Compiler family from the system, gcc or clang
         default: gcc
         type: string
+      variant:
+        description: >-
+          Build variant from .github/scripts/variant.bash, such as debug
+        default: default
+        type: string
       test-ranks:
         description: MPI ranks for sst-test-core/elements (-r)
         default: 1
@@ -179,6 +184,7 @@ jobs:
         env:
           SST_MPI: ${{ inputs.mpi }}
           SST_TOOLCHAIN: ${{ inputs.toolchain }}
+          SST_VARIANT: ${{ inputs.variant }}
           SST_TEST_RANKS: ${{ inputs.test-ranks }}
           SST_TEST_THREADS: ${{ inputs.test-threads }}
           SST_TEST_CATEGORIES: ${{ inputs.test-categories }}
@@ -210,8 +216,7 @@ jobs:
       - name: Test core
         shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
-          read -r -a categories <<<"${SST_TEST_CATEGORIES}"
-          "${SST_INSTALL_DIR}"/bin/sst-test-core -r "${SST_TEST_RANKS}" -t "${SST_TEST_THREADS}" -m "${categories[@]}"
+          sst-ci-scripts/run-tests.sh core
 
       - name: Save sst_test_outputs after core tests
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -231,8 +236,7 @@ jobs:
       - name: Test elements
         shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
-          read -r -a categories <<<"${SST_TEST_CATEGORIES}"
-          "${SST_INSTALL_DIR}"/bin/sst-test-elements -r "${SST_TEST_RANKS}" -t "${SST_TEST_THREADS}" -m "${categories[@]}"
+          sst-ci-scripts/run-tests.sh elements
 
       - name: Save sst_test_outputs after elements tests
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
