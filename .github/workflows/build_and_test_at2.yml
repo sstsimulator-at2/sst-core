@@ -1,5 +1,5 @@
 ---
-name: AT2
+name: sst-core build/install/test on self-hosted runners
 
 # yamllint disable-line rule:truthy
 on:

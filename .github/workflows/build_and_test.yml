@@ -1,5 +1,5 @@
 ---
-name: sst-core build/install/test
+name: sst-core build/install/test on free runners
 
 # yamllint disable-line rule:truthy
 on:
@@ -19,7 +19,7 @@ concurrency:
 permissions: {}
 
 # Jobs that build the same configuration share a ccache-key, and only one of
-# them saves it.
+# them must save it; check this when adding or removing jobs.
 jobs:
   rocky8-mpi-mr-2:
     uses:
