@@ -29,7 +29,7 @@ jobs:
     with:
       runs-on: ubuntu-26.04
       test-categories: ${{ inputs.test-categories }}
-      image: rockylinux/rockylinux:8.10@sha256:e8a49c5403b687db05d4d67333fa45808fbe74f36e683cec7abb1f7d0f2338c6
+      image: rockylinux/rockylinux:8
       test-ranks: 2
       ccache-key: rocky8-mpi-gcc
       ccache-save: true
