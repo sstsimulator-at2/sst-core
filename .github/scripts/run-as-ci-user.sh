@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# run_as_ci_user.sh: Run GitHub Actions step scripts as an unprivileged user
+# run-as-ci-user.sh: Run GitHub Actions step scripts as an unprivileged user
 # inside a CI container, where steps otherwise run as root.
 #
 # Usage:
-#   run_as_ci_user.sh --setup   create the user and give it the workspace
-#   run_as_ci_user.sh SCRIPT    run SCRIPT as the user; use as a step's
+#   run-as-ci-user.sh --setup   create the user and give it the workspace
+#   run-as-ci-user.sh SCRIPT    run SCRIPT as the user; use as a step's
 #                               `shell: bash <this script> {0}`
 #
 # Call --setup only inside a container.  Without root or without the user

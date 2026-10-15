@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# elements_autotools_noflags_nodeps.sh: TODO
+# build-core-autotools-noflags-nodeps-nompi.sh: Compile and install core,
+# using the Autotools build system, without explicitly specifying any
+# additional build dependencies at configure time.  MPI is explicitly
+# disabled.
 
 # shellcheck disable=SC2086
 # https://web.archive.org/web/20230401201759/https://wiki.bash-hackers.org/scripting/debuggingtips#making_xtrace_more_useful
@@ -10,21 +13,20 @@ set -x
 set -eo pipefail
 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "${SCRIPTDIR}"/compilers.bash
+source "${SCRIPTDIR}"/../compilers.bash
 
 toolchain="${1}"
 
-source_compilers_mpi "${toolchain}"
+source_compilers_nompi "${toolchain}"
 
-suffix="$(clean_suffix autotools_noflags_nodeps_${toolchain})"
+suffix="$(clean_suffix autotools_noflags_nodeps_nompi_${toolchain})"
 
-dir_src="${PWD}"/sst-elements
-dir_build="${PWD}"/sst-elements-build-${suffix}
-dir_core="${PWD}"/install_${suffix}
-dir_install="${dir_core}"
+dir_src="${PWD}/sst-core"
+dir_build="${PWD}"/sst-core-build-${suffix}
+dir_install="${PWD}"/install_${suffix}
 
 \rm -rf "${dir_build}" || true
-# \rm -rf "${dir_install}" || true
+\rm -rf "${dir_install}" || true
 
 pushd "${dir_src}"
 # A source tree from "make dist" is not a git checkout and must build with
@@ -38,11 +40,11 @@ popd
 mkdir -p "${dir_build}"
 pushd "${dir_build}"
 
-[ -n "${INTEL_PIN_DIRECTORY}" ] && PIN_TEXT="--with-pin=${INTEL_PIN_DIRECTORY}" || PIN_TEXT="--without-pin"
 INSTALL="$(command -v install) -p" "${dir_src}"/configure \
-       "${PIN_TEXT}" \
-       --prefix="${dir_install}" \
-       --with-sst-core="${dir_core}"
+       --disable-mpi \
+       --prefix="${dir_install}"
 
 bear_make_install
 ln -fsv "${dir_build}"/compile_commands.json "${dir_src}"/compile_commands.json
+# no installation available
+# make html

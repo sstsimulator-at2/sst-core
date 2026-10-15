@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# make_dist.sh: Replace the sst-core and sst-elements git checkouts with the
+# make-dist.sh: Replace the sst-core and sst-elements git checkouts with the
 # source trees from their "make dist" tarballs, so that later steps build
 # and test what a release would ship.
 #
-# Usage: make_dist.sh TOOLCHAIN
+# Usage: make-dist.sh TOOLCHAIN
 #
 # Run it from the directory that contains sst-core/ and sst-elements/,
 # before the normal compile steps.  It follows sst-sqe buildsys/bamboo.sh
@@ -38,7 +38,7 @@ source "${scriptdir}/compilers.bash"
 source_compilers_mpi "${toolchain}"
 set -u
 
-# The same directories as core_autotools_noflags_nodeps.sh, so that the
+# The same directories as build-core-autotools-noflags-nodeps.sh, so that the
 # second build of core gets ccache hits from the first one.
 suffix="$(clean_suffix "autotools_noflags_nodeps_${toolchain}")"
 dir_core_src="${PWD}/sst-core"

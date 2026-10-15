@@ -1,9 +1,10 @@
 # TODO: add the CMake build back to CI
 
 The CMake build of core (`experimental/`) was removed from CI when the jobs
-moved to the shared template `.github/workflows/build-test.yml`.  Before that,
+moved to the shared template `.github/workflows/sst-ci-job.yml`.  Before that,
 it was the self-hosted job `rocky9-cmake` (`.github/workflows/at2-rocky9-cmake.yml`,
-commented out in `build_and_test_at2.yml`).  These steps add it back.
+commented out in `build_and_test_at2.yml`, now `test-matrix-at2.yml`).
+These steps add it back.
 
 ## What the old job did
 
@@ -17,26 +18,30 @@ commented out in `build_and_test_at2.yml`).  These steps add it back.
 
 ## Steps
 
-1. Restore the script from the commit before the removal:
+1. Restore the script from the commit before the removal, and give it the
+   name of the other build scripts:
 
    ```bash
    commit="$(git log --diff-filter=D --format=%H -1 -- .github/scripts/core_cmake_noflags_nodeps.sh)"
    git checkout "${commit}^" -- .github/scripts/core_cmake_noflags_nodeps.sh
+   git mv .github/scripts/core_cmake_noflags_nodeps.sh \
+       .github/scripts/build/build-core-cmake-noflags-nodeps.sh
    ```
 
    Keep the `if [[ -d .git ]]` guard style of the autotools scripts if the
-   script gets any source tree preparation.
-2. Add an input `build-system` to `build-test.yml`, with values `autotools`
+   script gets any source tree preparation, and source
+   `"${SCRIPTDIR}"/../compilers.bash` like them.
+2. Add an input `build-system` to `sst-ci-job.yml`, with values `autotools`
    (default) and `cmake`.  When it is `cmake`:
-   - "Compile core" runs `core_cmake_noflags_nodeps.sh`.
+   - "Compile core" runs `build/build-core-cmake-noflags-nodeps.sh`.
    - `SST_INSTALL_DIR` is `install_cmake_noflags_nodeps_<toolchain>`.
    - Skip "Compile elements", "Test elements", their artifact upload, and
      make dist (`if: ${{ inputs.build-system == 'autotools' }}`).
 3. Install `cmake` and `ninja-build` (`ninja` on Homebrew and Arch) in
-   `.github/scripts/install_os_level_dependencies.sh`.  On Rocky Linux 9,
+   `.github/scripts/install-os-level-dependencies.sh`.  On Rocky Linux 9,
    `ninja-build` is in CRB, which the script already enables.
-4. Add caller jobs, for example `rocky9-mpi-cmake` in `build_and_test.yml`
-   and `at2-rocky9-cmake` in `build_and_test_at2.yml`.  Give each its own
+4. Add caller jobs, for example `rocky9-mpi-cmake` in `test-matrix-github.yml`
+   and `at2-rocky9-cmake` in `test-matrix-at2.yml`.  Give each its own
    `ccache-key` (for example `rocky9-mpi-gcc-cmake`) with `ccache-save: true`.
    The CMake and Autotools compile command lines differ, so they cannot
    share a cache.

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# elements_autotools_noflags_nodeps_nompi.sh: TODO
+# build-elements-autotools-noflags-nodeps-nompi.sh: TODO
 
 # shellcheck disable=SC2086
 # https://web.archive.org/web/20230401201759/https://wiki.bash-hackers.org/scripting/debuggingtips#making_xtrace_more_useful
@@ -10,7 +10,7 @@ set -x
 set -eo pipefail
 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "${SCRIPTDIR}"/compilers.bash
+source "${SCRIPTDIR}"/../compilers.bash
 
 toolchain="${1}"
 

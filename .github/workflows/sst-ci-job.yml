@@ -1,20 +1,22 @@
 ---
-# Build and test sst-core and sst-elements together.  The repository that
-# calls it is tested at the current ref, and the other one at devel.
-# sst-elements calls this file from sst-core devel, so only one copy exists.
+# One CI job of SST: build and test sst-core and sst-elements together, in
+# one configuration.  The repository that calls it is tested at the current
+# ref, and the other one at devel.  The job matrices (test-matrix-*.yml)
+# call it once per configuration.  sst-elements calls this file from
+# sst-core devel, so only one copy exists.
 #
 # Keep this a reusable workflow.  Do not make it a composite action:
 #
 # - The job sets runs-on, container (with --shm-size) and permissions.  A
 #   composite action runs as steps in the job of the caller, so each of the
-#   13 jobs in build_and_test.yml would have to set them again.
+#   jobs in test-matrix-github.yml would have to set them again.
 # - Each step shows as its own step in the run log.  The steps of a
 #   composite action show as one step of the caller, which makes a failure
 #   in one of them harder to find.
 # - A composite action in this repository can run only after a checkout.
 #   This workflow does the checkouts itself, at the paths that the CI
 #   scripts expect.
-name: Build/test
+name: SST build and test
 
 # yamllint disable-line rule:truthy
 on:
@@ -22,8 +24,8 @@ on:
     inputs:
       # An input cannot be a list, so give a list of labels as JSON.  A
       # single label needs no JSON quotes:
-      #   runs-on: ubuntu-26.04                     (build_and_test.yml)
-      #   runs-on: '["self-hosted", "sst-rocky8"]'  (build_and_test_at2.yml)
+      #   runs-on: ubuntu-26.04                     (test-matrix-github.yml)
+      #   runs-on: '["self-hosted", "sst-rocky8"]'  (test-matrix-at2.yml)
       runs-on:
         description: Runner label, or a JSON list of labels
         required: true
@@ -81,7 +83,9 @@ on:
         default: '3.13'
         type: string
       artifact-name:
-        description: Suffix for the uploaded artifacts, unique per caller
+        description: >-
+          Suffix for the uploaded artifacts and the job name, unique per
+          caller
         required: true
         type: string
 
@@ -89,7 +93,7 @@ permissions: {}
 
 jobs:
   build-test:
-    name: Build/test core and elements
+    name: Build/test SST (${{ inputs.artifact-name }})
     permissions:
       packages: write # to save ccache in ghcr.io
     runs-on: ${{ startsWith(inputs.runs-on, '[') && fromJSON(inputs.runs-on) || inputs.runs-on }}
@@ -133,7 +137,7 @@ jobs:
           repository: ${{ endsWith(github.repository, '/sst-elements') && github.repository || format('{0}/sst-elements', github.repository_owner) }}
           ref: ${{ !endsWith(github.repository, '/sst-elements') && 'devel' || '' }}
 
-      # make_dist.sh deletes sst-core/, and the tarball has no CI scripts.
+      # make-dist.sh deletes sst-core/, and the tarball has no CI scripts.
       - name: Copy CI scripts
         run: |
           cp -R sst-core/.github/scripts sst-ci-scripts
@@ -150,26 +154,26 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
           SST_INSTALL_CLANG: ${{ inputs.toolchain == 'clang' && '1' || '0' }}
         run: |
-          sst-ci-scripts/install_os_level_dependencies.sh
+          sst-ci-scripts/install-os-level-dependencies.sh
 
       - name: Install ORAS
         uses: oras-project/setup-oras@005458ad77f1c8facd38a094e4af2e69e5607ff4 # v2.0.2
 
       - name: Configure ccache
         run: |
-          sst-ci-scripts/ccache_ghcr.sh setup
+          sst-ci-scripts/ccache-ghcr.sh setup
 
       - name: Restore ccache
         env:
           CCACHE_KEY: ${{ inputs.ccache-key }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          sst-ci-scripts/ccache_ghcr.sh restore "${CCACHE_KEY}"
+          sst-ci-scripts/ccache-ghcr.sh restore "${CCACHE_KEY}"
 
       - name: Create unprivileged build user
         if: ${{ inputs.image != '' }}
         run: |
-          sst-ci-scripts/run_as_ci_user.sh --setup
+          sst-ci-scripts/run-as-ci-user.sh --setup
 
       - name: Set environment variables
         env:
@@ -180,13 +184,13 @@ jobs:
           SST_TEST_CATEGORIES: ${{ inputs.test-categories }}
           SST_TEST_OVERSUBSCRIBE: ${{ inputs.test-oversubscribe }}
         run: |
-          sst-ci-scripts/set_env.sh
+          sst-ci-scripts/set-env.sh
 
       - name: Replace the sources with the make dist tarballs
         if: ${{ inputs.make-dist }}
-        shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
+        shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
-          sst-ci-scripts/make_dist.sh "${SST_TOOLCHAIN}"
+          sst-ci-scripts/make-dist.sh "${SST_TOOLCHAIN}"
 
       - name: Save make dist tarballs
         if: ${{ inputs.make-dist && !cancelled() }}
@@ -199,12 +203,12 @@ jobs:
           retention-days: 5
 
       - name: Compile core
-        shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
+        shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
-          "sst-ci-scripts/core_autotools_noflags_nodeps${SST_MPI_SUFFIX}.sh" "${SST_TOOLCHAIN}"
+          "sst-ci-scripts/build/build-core-autotools-noflags-nodeps${SST_MPI_SUFFIX}.sh" "${SST_TOOLCHAIN}"
 
       - name: Test core
-        shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
+        shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
           read -r -a categories <<<"${SST_TEST_CATEGORIES}"
           "${SST_INSTALL_DIR}"/bin/sst-test-core -r "${SST_TEST_RANKS}" -t "${SST_TEST_THREADS}" -m "${categories[@]}"
@@ -220,12 +224,12 @@ jobs:
         if: ${{ !cancelled() }}
 
       - name: Compile elements
-        shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
+        shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
-          "sst-ci-scripts/elements_autotools_noflags_nodeps${SST_MPI_SUFFIX}.sh" "${SST_TOOLCHAIN}"
+          "sst-ci-scripts/build/build-elements-autotools-noflags-nodeps${SST_MPI_SUFFIX}.sh" "${SST_TOOLCHAIN}"
 
       - name: Test elements
-        shell: bash sst-ci-scripts/run_as_ci_user.sh {0}
+        shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
           read -r -a categories <<<"${SST_TEST_CATEGORIES}"
           "${SST_INSTALL_DIR}"/bin/sst-test-elements -r "${SST_TEST_RANKS}" -t "${SST_TEST_THREADS}" -m "${categories[@]}"
@@ -254,4 +258,4 @@ jobs:
           CCACHE_KEY: ${{ inputs.ccache-key }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          sst-ci-scripts/ccache_ghcr.sh save "${CCACHE_KEY}"
+          sst-ci-scripts/ccache-ghcr.sh save "${CCACHE_KEY}"

@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
-# ccache_ghcr.sh: Keep the ccache directory as an OCI artifact in the GitHub
+# ccache-ghcr.sh: Keep the ccache directory as an OCI artifact in the GitHub
 # Container Registry, which has no 10 GB limit like the Actions cache.
 #
 # Usage:
-#   ccache_ghcr.sh setup        configure ccache for the following steps
-#   ccache_ghcr.sh restore KEY  pull ghcr.io/<owner>/ccache:KEY, if present;
+#   ccache-ghcr.sh setup        configure ccache for the following steps
+#   ccache-ghcr.sh restore KEY  pull ghcr.io/<owner>/ccache:KEY, if present;
 #                               needs GITHUB_TOKEN with packages: read
-#   ccache_ghcr.sh save KEY     push the cache as ghcr.io/<owner>/ccache:KEY;
+#   ccache-ghcr.sh save KEY     push the cache as ghcr.io/<owner>/ccache:KEY;
 #                               needs GITHUB_TOKEN with packages: write
 #
 # sst-core and sst-elements push to the same package, so a build in one
 # repository warms the cache for the other.  CCACHE_BASEDIR makes the
 # different workspace paths of the two repositories hash the same.
 #
-# Needs ccache (install_os_level_dependencies.sh) and oras
+# Needs ccache (install-os-level-dependencies.sh) and oras
 # (oras-project/setup-oras).  Without ccache, all commands do nothing.
 
 set -euo pipefail

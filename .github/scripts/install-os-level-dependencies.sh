@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# install_os_level_dependencies.sh: Install dependencies at the operating
+# install-os-level-dependencies.sh: Install dependencies at the operating
 # system level needed for GitHub Actions CI runs.
 #
 # Set SST_INSTALL_CLANG=1 to also install Clang from the distribution.
