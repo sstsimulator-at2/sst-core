@@ -9,14 +9,14 @@ permissions: {}
 
 # Cancels any in progress 'workflow' associated with this PR
 concurrency:
-  group: build_and_test_at2-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  group: test-matrix-at2-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 jobs:
   # at2-rocky8:
   #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:
@@ -29,7 +29,7 @@ jobs:
   at2-rocky8-nompi:
     if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -43,7 +43,7 @@ jobs:
   # at2-rocky9:
   #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:
@@ -56,7 +56,7 @@ jobs:
   at2-rocky9-nompi:
     if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -70,7 +70,7 @@ jobs:
   # at2-rocky9-clang:
   #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:
@@ -84,7 +84,7 @@ jobs:
   # at2-rocky9-make-dist:
   #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:
@@ -97,7 +97,7 @@ jobs:
   # at2-rocky9-mr-2:
   #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:
@@ -110,7 +110,7 @@ jobs:
   # at2-rocky9-mt-2:
   #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:
@@ -123,7 +123,7 @@ jobs:
   # at2-ubuntu2204:
   #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:
@@ -136,7 +136,7 @@ jobs:
   at2-ubuntu2404-nompi:
     if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -150,7 +150,7 @@ jobs:
   # at2-ubuntu2404:
   #   if: ${{ (github.event.action == 'synchronize' || github.event.action == 'opened') || github.event.action == 'labeled' }}
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:

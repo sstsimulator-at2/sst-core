@@ -1,6 +1,6 @@
 ---
 # Each devel build pushes its ccache to ghcr.io/<owner>/ccache:<key> (see
-# build-test.yml).  The version that held the tag before stays in the
+# sst-ci-job.yml).  The version that held the tag before stays in the
 # package without a tag.  Delete those weekly.
 name: Prune ccache package
 

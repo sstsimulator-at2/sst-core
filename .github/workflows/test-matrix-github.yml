@@ -13,7 +13,7 @@ on:
         type: string
 
 concurrency:
-  group: build_and_test-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  group: test-matrix-github-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 permissions: {}
@@ -23,7 +23,7 @@ permissions: {}
 jobs:
   rocky8-mpi-mr-2:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -36,7 +36,7 @@ jobs:
       artifact-name: rocky8-mpi-mr-2
   rocky9-mpi:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -48,7 +48,7 @@ jobs:
       artifact-name: rocky9-mpi
   rocky9-mpi-clang:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -61,7 +61,7 @@ jobs:
       artifact-name: rocky9-mpi-clang
   rocky9-mpi-make-dist:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -73,7 +73,7 @@ jobs:
       artifact-name: rocky9-mpi-make-dist
   rocky9-mpi-mr-2:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -85,7 +85,7 @@ jobs:
       artifact-name: rocky9-mpi-mr-2
   rocky9-mpi-mr-2-mt-2:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -98,7 +98,7 @@ jobs:
       artifact-name: rocky9-mpi-mr-2-mt-2
   rocky9-mpi-mt-2:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -110,7 +110,7 @@ jobs:
       artifact-name: rocky9-mpi-mt-2
   rocky9-nompi:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -125,7 +125,7 @@ jobs:
   #
   # rocky10-mpi-mr-2:
   #   uses:
-  #     $/.github/workflows/build-test.yml
+  #     $/.github/workflows/sst-ci-job.yml
   #   permissions:
   #     packages: write # to save ccache
   #   with:
@@ -138,7 +138,7 @@ jobs:
   #     artifact-name: rocky10-mpi-mr-2
   rocky10-mpi:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -150,7 +150,7 @@ jobs:
       artifact-name: rocky10-mpi
   ubuntu2404-mpi:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -162,7 +162,7 @@ jobs:
       artifact-name: ubuntu2404-mpi
   ubuntu2604-mpi:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -174,7 +174,7 @@ jobs:
       artifact-name: ubuntu2604-mpi
   macos-15:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -186,7 +186,7 @@ jobs:
       artifact-name: macos-15
   macos-26:
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -200,7 +200,7 @@ jobs:
   rocky9-mpi-mr-4:
     if: ${{ contains(inputs.test-categories, 'nightly') }}
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -213,7 +213,7 @@ jobs:
   rocky9-mpi-mt-4:
     if: ${{ contains(inputs.test-categories, 'nightly') }}
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:
@@ -226,7 +226,7 @@ jobs:
   rocky9-mpi-mr-3-mt-2:
     if: ${{ contains(inputs.test-categories, 'nightly') }}
     uses:
-      $/.github/workflows/build-test.yml
+      $/.github/workflows/sst-ci-job.yml
     permissions:
       packages: write # to save ccache
     with:

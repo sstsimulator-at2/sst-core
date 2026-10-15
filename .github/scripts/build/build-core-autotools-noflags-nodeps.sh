@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# core_autotools_noflags_nodeps.sh: Compile and install core, using the
+# build-core-autotools-noflags-nodeps.sh: Compile and install core, using the
 # Autotools build system, without explicitly specifying any additional build
 # dependencies at configure time.
 
@@ -12,7 +12,7 @@ set -x
 set -eo pipefail
 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "${SCRIPTDIR}"/compilers.bash
+source "${SCRIPTDIR}"/../compilers.bash
 
 toolchain="${1}"
 
