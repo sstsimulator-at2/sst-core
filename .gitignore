@@ -43,6 +43,7 @@ libtool
 *.la
 sst_test_outputs/
 build/
+!/.github/scripts/build/
 *.so
 .\#*
 \#*\#
