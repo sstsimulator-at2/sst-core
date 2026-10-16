@@ -42,10 +42,19 @@ on:
         description: Compiler family from the system, gcc or clang
         default: gcc
         type: string
-      variant:
+      # mpi, debug-output and deps are the build options that vary between
+      # jobs.  Options that are the same for all jobs are in the build
+      # scripts.  See .github/scripts/build-options.bash.
+      debug-output:
         description: >-
-          Build variant from .github/scripts/variant.bash, such as debug
-        default: default
+          Build core with --enable-debug, which compiles in the debug output
+          (it does not change -O or -g)
+        default: false
+        type: boolean
+      deps:
+        description: >-
+          Third-party dependencies: all (required), or none (disabled)
+        default: all
         type: string
       test-ranks:
         description: MPI ranks for sst-test-core/elements (-r)
@@ -158,6 +167,7 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
           SST_INSTALL_CLANG: ${{ inputs.toolchain == 'clang' && '1' || '0' }}
+          SST_DEPS: ${{ inputs.deps }}
         run: |
           sst-ci-scripts/install-os-level-dependencies.sh
 
@@ -184,7 +194,8 @@ jobs:
         env:
           SST_MPI: ${{ inputs.mpi }}
           SST_TOOLCHAIN: ${{ inputs.toolchain }}
-          SST_VARIANT: ${{ inputs.variant }}
+          SST_DEBUG_OUTPUT: ${{ inputs.debug-output }}
+          SST_DEPS: ${{ inputs.deps }}
           SST_TEST_RANKS: ${{ inputs.test-ranks }}
           SST_TEST_THREADS: ${{ inputs.test-threads }}
           SST_TEST_CATEGORIES: ${{ inputs.test-categories }}
@@ -211,7 +222,7 @@ jobs:
       - name: Compile core
         shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
-          "sst-ci-scripts/build/build-core-autotools-noflags-nodeps${SST_MPI_SUFFIX}.sh" "${SST_TOOLCHAIN}"
+          sst-ci-scripts/build/build-core-autotools.sh "${SST_TOOLCHAIN}"
 
       - name: Test core
         shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
@@ -231,7 +242,7 @@ jobs:
       - name: Compile elements
         shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
         run: |
-          "sst-ci-scripts/build/build-elements-autotools-noflags-nodeps${SST_MPI_SUFFIX}.sh" "${SST_TOOLCHAIN}"
+          sst-ci-scripts/build/build-elements-autotools.sh "${SST_TOOLCHAIN}"
 
       - name: Test elements
         shell: bash sst-ci-scripts/run-as-ci-user.sh {0}
