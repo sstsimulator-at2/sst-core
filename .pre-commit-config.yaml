@@ -78,7 +78,7 @@ repos:
         args: [.]
         pass_filenames: false
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.31.0
+    rev: v1.31.1
     hooks:
       - id: zizmor
         args: [--no-progress, --persona=pedantic, --fix=all]
