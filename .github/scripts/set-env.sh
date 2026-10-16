@@ -5,11 +5,18 @@
 #
 # Usage: set-env.sh
 #
-# Reads SST_MPI (true or false), SST_TOOLCHAIN, SST_TEST_RANKS,
+# Reads SST_MPI (true or false), SST_TOOLCHAIN, SST_VARIANT, SST_TEST_RANKS,
 # SST_TEST_THREADS, SST_TEST_CATEGORIES and SST_TEST_OVERSUBSCRIBE (true or
 # false) from the environment, which the workflow step sets from its inputs.
+# The variants are in variant.bash.
 
 set -euo pipefail
+
+scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=SCRIPTDIR/variant.bash
+source "${scriptdir}/variant.bash"
+sst_variant_check "${SST_VARIANT}"
+variant_suffix="$(sst_variant_suffix "${SST_VARIANT}")"
 
 # The script names use "-nompi", and the install directory "_nompi".
 if [[ "${SST_MPI}" == "true" ]]; then
@@ -28,7 +35,9 @@ MAKEFLAGS="-j$(nproc)"
     echo "OMPI_MCA_hwloc_base_use_hwthreads_as_cpus=1"
     echo "SST_MPI_SUFFIX=${mpi_suffix:+-${mpi_suffix}}"
     echo "SST_TOOLCHAIN=${SST_TOOLCHAIN}"
-    echo "SST_INSTALL_DIR=${GITHUB_WORKSPACE}/install_autotools_noflags_nodeps${mpi_suffix:+_${mpi_suffix}}_${SST_TOOLCHAIN}"
+    echo "SST_VARIANT=${SST_VARIANT}"
+    # The same name as the build scripts give it.
+    echo "SST_INSTALL_DIR=${GITHUB_WORKSPACE}/install_autotools_noflags_nodeps${mpi_suffix:+_${mpi_suffix}}_${SST_TOOLCHAIN}${variant_suffix}"
     echo "SST_TEST_RANKS=${SST_TEST_RANKS}"
     echo "SST_TEST_THREADS=${SST_TEST_THREADS}"
     echo "SST_TEST_CATEGORIES=${SST_TEST_CATEGORIES}"

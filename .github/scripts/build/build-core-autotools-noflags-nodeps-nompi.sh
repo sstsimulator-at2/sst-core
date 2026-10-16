@@ -14,12 +14,21 @@ set -eo pipefail
 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${SCRIPTDIR}"/../compilers.bash
+source "${SCRIPTDIR}"/../variant.bash
 
 toolchain="${1}"
 
 source_compilers_nompi "${toolchain}"
 
-suffix="$(clean_suffix autotools_noflags_nodeps_nompi_${toolchain})"
+variant="${SST_VARIANT:-default}"
+sst_variant_check "${variant}"
+# Not mapfile: this runs under /bin/bash, which is bash 3.2 on macOS.
+variant_configure_args=()
+while IFS= read -r arg; do
+    variant_configure_args+=("${arg}")
+done < <(sst_variant_core_configure_args "${variant}")
+
+suffix="$(clean_suffix "autotools_noflags_nodeps_nompi_${toolchain}$(sst_variant_suffix "${variant}")")"
 
 dir_src="${PWD}/sst-core"
 dir_build="${PWD}"/sst-core-build-${suffix}
@@ -42,7 +51,8 @@ pushd "${dir_build}"
 
 INSTALL="$(command -v install) -p" "${dir_src}"/configure \
        --disable-mpi \
-       --prefix="${dir_install}"
+       --prefix="${dir_install}" \
+       "${variant_configure_args[@]}"
 
 bear_make_install
 ln -fsv "${dir_build}"/compile_commands.json "${dir_src}"/compile_commands.json

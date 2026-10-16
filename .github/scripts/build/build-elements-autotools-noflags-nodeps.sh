@@ -11,12 +11,16 @@ set -eo pipefail
 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${SCRIPTDIR}"/../compilers.bash
+source "${SCRIPTDIR}"/../variant.bash
 
 toolchain="${1}"
 
 source_compilers_mpi "${toolchain}"
 
-suffix="$(clean_suffix autotools_noflags_nodeps_${toolchain})"
+variant="${SST_VARIANT:-default}"
+sst_variant_check "${variant}"
+
+suffix="$(clean_suffix "autotools_noflags_nodeps_${toolchain}$(sst_variant_suffix "${variant}")")"
 
 dir_src="${PWD}"/sst-elements
 dir_build="${PWD}"/sst-elements-build-${suffix}
