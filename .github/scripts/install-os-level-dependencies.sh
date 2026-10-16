@@ -4,24 +4,46 @@
 # system level needed for GitHub Actions CI runs.
 #
 # Set SST_INSTALL_CLANG=1 to also install Clang from the distribution.
+#
+# With SST_DEPS=all (the default), also install the third-party dependencies
+# that build-options.bash asks configure for; with SST_DEPS=none, do not.
 
 set -euo pipefail
 
 # Doxygen and bzip3 are for `make dist`.
 
+case "${SST_DEPS:-all}" in
+    all) deps=1 ;;
+    none) deps=0 ;;
+    *)
+        echo "SST_DEPS must be all or none, not ${SST_DEPS}" >&2
+        exit 1
+        ;;
+esac
+
 export DEBIAN_FRONTEND=noninteractive
 if command -v brew; then
-    brew install \
-         autoconf \
-         automake \
-         coreutils \
-         doxygen \
-         libtool \
-         ncurses \
-         ccache \
-         open-mpi \
-         pygments
+    packages=(
+        autoconf
+        automake
+        coreutils
+        doxygen
+        libtool
+        ncurses
+        ccache
+        open-mpi
+        pygments
+    )
+    # macOS has zlib.  The SST python is the one of actions/setup-python,
+    # so numpy comes from pip.
+    if [[ "${deps}" -eq 1 ]]; then
+        packages+=(hdf5 pkgconf)
+    fi
+    brew install "${packages[@]}"
     python -m pip install blessings
+    if [[ "${deps}" -eq 1 ]]; then
+        python -m pip install numpy
+    fi
 elif command -v dnf; then
     # shellcheck source=/dev/null
     el_major="$(. /etc/os-release && echo "${VERSION_ID%%.*}")"
@@ -60,6 +82,15 @@ elif command -v dnf; then
     else
         packages+=(python3-devel)
     fi
+    if [[ "${deps}" -eq 1 ]]; then
+        # hdf5-devel is in EPEL, and has the C++ library that core needs.
+        packages+=(hdf5-devel pkgconf-pkg-config zlib-devel)
+        if [[ "${el_major}" -eq 8 ]]; then
+            packages+=(python39-numpy)
+        else
+            packages+=(python3-numpy)
+        fi
+    fi
     if [[ "${SST_INSTALL_CLANG:-0}" == "1" ]]; then
         packages+=(clang)
     fi
@@ -86,6 +117,9 @@ elif command -v apt-get; then
         python3-pygments
         wget
     )
+    if [[ "${deps}" -eq 1 ]]; then
+        packages+=(libhdf5-dev pkg-config python3-numpy zlib1g-dev)
+    fi
     if [[ "${SST_INSTALL_CLANG:-0}" == "1" ]]; then
         packages+=(clang)
     fi

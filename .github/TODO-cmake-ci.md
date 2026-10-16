@@ -25,16 +25,19 @@ These steps add it back.
    commit="$(git log --diff-filter=D --format=%H -1 -- .github/scripts/core_cmake_noflags_nodeps.sh)"
    git checkout "${commit}^" -- .github/scripts/core_cmake_noflags_nodeps.sh
    git mv .github/scripts/core_cmake_noflags_nodeps.sh \
-       .github/scripts/build/build-core-cmake-noflags-nodeps.sh
+       .github/scripts/build/build-core-cmake.sh
    ```
 
    Keep the `if [[ -d .git ]]` guard style of the autotools scripts if the
    script gets any source tree preparation, and source
-   `"${SCRIPTDIR}"/../compilers.bash` like them.
+   `"${SCRIPTDIR}"/../compilers.bash` like them.  Take the configure
+   options and the directory suffix from `build-options.bash`, like
+   `build/build-core-autotools.sh`.
 2. Add an input `build-system` to `sst-ci-job.yml`, with values `autotools`
    (default) and `cmake`.  When it is `cmake`:
-   - "Compile core" runs `build/build-core-cmake-noflags-nodeps.sh`.
-   - `SST_INSTALL_DIR` is `install_cmake_noflags_nodeps_<toolchain>`.
+   - "Compile core" runs `build/build-core-cmake.sh`.
+   - `SST_INSTALL_DIR` is `install_cmake_<suffix>`, with the suffix from
+     `sst_build_suffix`.
    - Skip "Compile elements", "Test elements", their artifact upload, and
      make dist (`if: ${{ inputs.build-system == 'autotools' }}`).
 3. Install `cmake` and `ninja-build` (`ninja` on Homebrew and Arch) in

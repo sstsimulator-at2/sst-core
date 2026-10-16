@@ -9,8 +9,8 @@
 #   SST_TEST_RANKS       MPI ranks, -r (default 1)
 #   SST_TEST_THREADS     threads, -t (default 1)
 #   SST_TEST_CATEGORIES  space-separated test categories, -m (default pr)
-#   SST_VARIANT          build variant from variant.bash (default "default");
-#                        its test environment is exported first
+#   SST_DEBUG_OUTPUT     and the other options of build-options.bash; their
+#                        test environment is exported first
 #
 # Nothing here is GitHub-specific, so it runs the same on a local machine.
 # Run it from the directory where sst_test_outputs/ should go.
@@ -24,16 +24,15 @@ fi
 what="${1}"
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=SCRIPTDIR/variant.bash
-source "${scriptdir}/variant.bash"
+# shellcheck source=SCRIPTDIR/build-options.bash
+source "${scriptdir}/build-options.bash"
 
-variant="${SST_VARIANT:-default}"
-sst_variant_check "${variant}"
+sst_options_check
 # Not mapfile: keep this usable with bash 3.2 (macOS /bin/bash).
 while IFS= read -r assignment; do
-    echo "variant ${variant}: export ${assignment}"
+    echo "build options: export ${assignment}"
     export "${assignment?}"
-done < <(sst_variant_test_env "${variant}")
+done < <(sst_test_env)
 
 read -r -a categories <<<"${SST_TEST_CATEGORIES:-pr}"
 

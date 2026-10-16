@@ -7,6 +7,10 @@ on:
 
 permissions: {}
 
+# TODO: add a nightly job with CUDA and GPGPU-Sim, on an AT2 image that has
+# the CUDA toolkit.  build-options.bash passes --with-cuda and
+# --with-gpgpusim when CUDA_INSTALL_PATH and GPGPUSIM_ROOT are set.
+
 # Cancels any in progress 'workflow' associated with this PR
 concurrency:
   group: test-matrix-at2-${{github.workflow}}-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
@@ -37,6 +41,8 @@ jobs:
       # The runner image has the dependencies.
       install-deps: false
       mpi: false
+      # TODO: remove when the AT2 images have the third-party dependencies.
+      deps: none
       ccache-key: at2-rocky8-nompi-gcc
       ccache-save: true
       artifact-name: at2-rocky8-nompi
@@ -64,6 +70,8 @@ jobs:
       # The runner image has the dependencies.
       install-deps: false
       mpi: false
+      # TODO: remove when the AT2 images have the third-party dependencies.
+      deps: none
       ccache-key: at2-rocky9-nompi-gcc
       ccache-save: true
       artifact-name: at2-rocky9-nompi
@@ -144,6 +152,8 @@ jobs:
       # The runner image has the dependencies.
       install-deps: false
       mpi: false
+      # TODO: remove when the AT2 images have the third-party dependencies.
+      deps: none
       ccache-key: at2-ubuntu2404-nompi-gcc
       ccache-save: true
       artifact-name: at2-ubuntu2404-nompi

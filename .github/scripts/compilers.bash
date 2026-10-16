@@ -84,23 +84,6 @@ clean_suffix() {
 #     fi
 # fi
 
-if [ -n "${CUDA_INSTALL_PATH}" ]; then
-    CUDA_TEXT="--with-cuda=${CUDA_INSTALL_PATH}"
-elif [ -n "${CUDA_HOME}" ]; then
-    export CUDA_INSTALL_PATH="${CUDA_HOME}"
-    CUDA_TEXT="--with-cuda=${CUDA_INSTALL_PATH}"
-else
-    # shellcheck disable=SC2034
-    CUDA_TEXT=""
-fi
-
-if [ -n "${GPGPUSIM_ROOT}" ]; then
-    GPGPUSIM_TEXT="--with-gpgpusim=${GPGPUSIM_ROOT}"
-else
-    # shellcheck disable=SC2034
-    GPGPUSIM_TEXT=""
-fi
-
 max_cpus() {
     local max=${1:-16}
     local cpu_count
