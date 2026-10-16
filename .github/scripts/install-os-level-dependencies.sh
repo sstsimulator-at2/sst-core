@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # install-os-level-dependencies.sh: Install dependencies at the operating
 # system level needed for GitHub Actions CI runs.

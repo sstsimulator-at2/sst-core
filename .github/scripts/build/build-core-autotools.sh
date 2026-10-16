@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # build-core-autotools.sh: Compile and install core with the Autotools build
 # system, in the configuration that build-options.bash reads from the
@@ -9,9 +9,6 @@
 # Run it from the directory that contains sst-core/.  It builds in
 # sst-core-build-<suffix>/ and installs into install_<suffix>/, with the
 # suffix from sst_build_suffix.
-#
-# Not "#!/usr/bin/env bash": this runs under /bin/bash, which is bash 3.2 on
-# macOS.
 
 # https://web.archive.org/web/20230401201759/https://wiki.bash-hackers.org/scripting/debuggingtips#making_xtrace_more_useful
 export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -34,7 +31,6 @@ else
     source_compilers_nompi "${toolchain}"
 fi
 
-# Not mapfile: bash 3.2.
 configure_args=()
 while IFS= read -r arg; do
     configure_args+=("${arg}")

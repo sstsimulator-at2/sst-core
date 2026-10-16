@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # build-elements-autotools.sh: Compile and install elements with the
 # Autotools build system, into the core that build-core-autotools.sh
@@ -10,9 +10,6 @@
 # Run it from the directory that contains sst-elements/.  It builds in
 # sst-elements-build-<suffix>/ and installs into install_<suffix>/, with the
 # suffix from sst_build_suffix.
-#
-# Not "#!/usr/bin/env bash": this runs under /bin/bash, which is bash 3.2 on
-# macOS.
 
 # https://web.archive.org/web/20230401201759/https://wiki.bash-hackers.org/scripting/debuggingtips#making_xtrace_more_useful
 export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -39,7 +36,6 @@ else
     export OMPI_CXX="${CXX}"
 fi
 
-# Not mapfile: bash 3.2.
 configure_args=()
 while IFS= read -r arg; do
     configure_args+=("${arg}")

@@ -28,7 +28,6 @@ scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${scriptdir}/build-options.bash"
 
 sst_options_check
-# Not mapfile: keep this usable with bash 3.2 (macOS /bin/bash).
 while IFS= read -r assignment; do
     echo "build options: export ${assignment}"
     export "${assignment?}"

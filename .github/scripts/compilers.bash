@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # compilers.bash: Common logic for compiling SST, specifically setting up
 # compiler environment variables.

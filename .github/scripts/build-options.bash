@@ -23,8 +23,6 @@
 # or that follow from another option or from the platform, are set here and
 # are not inputs.
 #
-# Keep this usable with bash 3.2 (macOS /bin/bash): no mapfile.
-#
 # Usage:
 #   source build-options.bash
 #   sst_options_check
