@@ -78,7 +78,17 @@ sst_core_configure_args() {
     fi
     echo "--${with}-hdf5"
     echo "--${with}-libz"
-    echo "--${with}-ncurses"
+    # Homebrew ncurses is keg-only, so its ncurses*-config is not on PATH.
+    # Configure looks for it in DIR/bin.
+    local ncurses_prefix=""
+    if [[ "${with}" == "with" ]] && command -v brew >/dev/null 2>&1; then
+        ncurses_prefix="$(brew --prefix ncurses)"
+    fi
+    if [[ -n "${ncurses_prefix}" ]] && [[ -d "${ncurses_prefix}/bin" ]]; then
+        echo "--with-ncurses=${ncurses_prefix}"
+    else
+        echo "--${with}-ncurses"
+    fi
 }
 
 # Print the extra arguments for the elements configure, one per line.
