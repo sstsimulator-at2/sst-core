@@ -17,9 +17,9 @@ AC_DEFUN([SST_CHECK_CURSES],
     [AS_IF([test -x "$with_ncurses"],
         [NCURSES_CONFIG_EXE=$with_ncurses])])
 
-  dnl test ncursesN-config
+  dnl test ncursesN-config; a plain --with-ncurses (yes) searches PATH
   AS_IF([test $NCURSES_CONFIG_EXE = "no"],
-    [AS_IF([test -n "$with_ncurses"],
+    [AS_IF([test -n "$with_ncurses" -a "$with_ncurses" != "yes"],
         [AC_PATH_PROGS([NCURSES_CONFIG_EXE],
                        ["ncurses6-config" "ncursesw6-config" "ncurses5.4-config" "ncurses5-config"],
                        ["no"], ["$with_ncurses/bin"])],

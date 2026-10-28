@@ -35,12 +35,24 @@ scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 set +u
 # shellcheck source=SCRIPTDIR/compilers.bash
 source "${scriptdir}/compilers.bash"
-source_compilers_mpi "${toolchain}"
+# shellcheck source=SCRIPTDIR/build-options.bash
+source "${scriptdir}/build-options.bash"
+sst_options_check
+if [[ "${SST_MPI:-true}" == "true" ]]; then
+    source_compilers_mpi "${toolchain}"
+else
+    source_compilers_nompi "${toolchain}"
+fi
 set -u
 
-# The same directories as build-core-autotools-noflags-nodeps.sh, so that the
-# second build of core gets ccache hits from the first one.
-suffix="$(clean_suffix "autotools_noflags_nodeps_${toolchain}")"
+# The same directories and core configure arguments as
+# build/build-core-autotools.sh, so that the second build of core gets
+# ccache hits from the first one.
+suffix="$(sst_build_suffix "${toolchain}")"
+core_configure_args=()
+mapfile -t core_configure_args < <(sst_core_configure_args)
+elements_configure_args=()
+mapfile -t elements_configure_args < <(sst_elements_configure_args)
 dir_core_src="${PWD}/sst-core"
 dir_core_build="${PWD}/sst-core-build-${suffix}"
 dir_elements_src="${PWD}/sst-elements"
@@ -90,7 +102,9 @@ pushd "${dir_core_src}"
 popd
 mkdir -p "${dir_core_build}"
 pushd "${dir_core_build}"
-"${dir_core_src}/configure" --prefix="${dir_install}"
+"${dir_core_src}/configure" \
+    --prefix="${dir_install}" \
+    "${core_configure_args[@]}"
 make dist
 # AC_INIT([SSTCore], ...) names the tarball sstcore-VERSION.
 core_tarball="$(find_tarball "${dir_core_build}" 'sstcore-*.tar.gz' 'sst-core-*.tar.gz')"
@@ -110,7 +124,7 @@ pushd "${dir_elements_build}"
 "${dir_elements_src}/configure" \
     --prefix="${dir_install}" \
     --with-sst-core="${dir_install}" \
-    --without-pin
+    "${elements_configure_args[@]}"
 make dist
 # AC_INIT([SST Elements Library], ...) names the tarball
 # sst-elements-library-VERSION.

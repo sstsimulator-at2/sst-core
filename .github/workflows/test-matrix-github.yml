@@ -249,9 +249,25 @@ jobs:
       runs-on: ubuntu-26.04
       test-categories: ${{ inputs.test-categories }}
       image: rockylinux/rockylinux:9
-      variant: debug
+      debug-output: true
       # --enable-debug changes sst_config.h, so nothing in rocky9-mpi-gcc
       # would hit.
       ccache-key: rocky9-mpi-gcc-debug
       ccache-save: true
       artifact-name: rocky9-mpi-debug
+  rocky9-mpi-nodeps:
+    if: ${{ contains(inputs.test-categories, 'nightly') }}
+    uses:
+      $/.github/workflows/sst-ci-job.yml
+    permissions:
+      packages: write # to save ccache
+    with:
+      runs-on: ubuntu-26.04
+      test-categories: ${{ inputs.test-categories }}
+      image: rockylinux/rockylinux:9
+      deps: none
+      # Without the dependencies, sst_config.h differs, so nothing in
+      # rocky9-mpi-gcc would hit.
+      ccache-key: rocky9-mpi-gcc-nodeps
+      ccache-save: true
+      artifact-name: rocky9-mpi-nodeps
